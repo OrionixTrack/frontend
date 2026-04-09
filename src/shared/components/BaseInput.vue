@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   modelValue?: string
+  placeholder?: string
 }>()
 
 const emit = defineEmits<{
@@ -13,5 +14,5 @@ const handleInput = (event: Event): void => {
 </script>
 
 <template>
-  <input :value="modelValue" @input="handleInput">
+  <input :value="modelValue" :placeholder="placeholder" @input="handleInput">
 </template>

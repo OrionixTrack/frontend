@@ -31,7 +31,9 @@ const userDisplayName = computed(() => getUserDisplayName(props.session.role, pr
 const workspaceTitle = computed(() =>
   props.session.role === 'owner'
     ? props.messages.dashboard.workspaceOwner
-    : props.messages.dashboard.workspaceDispatcher,
+    : props.session.role === 'dispatcher'
+      ? props.messages.dashboard.workspaceDispatcher
+      : props.messages.dashboard.workspaceDriver,
 )
 
 const leadMetric = computed(() => props.dashboardState.stats[0] ?? null)
@@ -42,6 +44,7 @@ const supportingMetrics = computed(() => props.dashboardState.stats.slice(1))
   <WorkspaceShell
     :session="session"
     :active-profile="activeProfile"
+    :is-loading="dashboardState.isLoading"
     :locale="locale"
     :messages="messages"
     :theme="theme"
@@ -49,10 +52,6 @@ const supportingMetrics = computed(() => props.dashboardState.stats.slice(1))
     @logout="emit('logout')"
     @update-theme="emit('updateTheme', $event)"
   >
-      <div v-if="dashboardState.isLoading" class="panel">
-        {{ messages.common.loading }}
-      </div>
-
       <section class="dashboard-grid">
         <article class="dashboard-hero panel">
           <div class="dashboard-hero-copy">
@@ -90,7 +89,7 @@ const supportingMetrics = computed(() => props.dashboardState.stats.slice(1))
         </article>
 
         <article
-          v-if="session.role === 'dispatcher'"
+          v-if="session.role === 'dispatcher' || session.role === 'driver'"
           class="panel panel-trips"
         >
           <div class="panel-header">

@@ -1,17 +1,21 @@
-import type { DispatcherAuthResponse, OwnerAuthResponse } from '@features/auth/types'
+import type { DispatcherAuthResponse, DriverAuthResponse, OwnerAuthResponse } from '@features/auth/types'
 import type { UserRole } from '@shared/types'
 
 const isOwnerAuthResponse = (
-  payload: OwnerAuthResponse | DispatcherAuthResponse,
+  payload: OwnerAuthResponse | DispatcherAuthResponse | DriverAuthResponse,
 ): payload is OwnerAuthResponse => 'owner' in payload
+
+const isDriverAuthResponse = (
+  payload: DispatcherAuthResponse | DriverAuthResponse,
+): payload is DriverAuthResponse => 'driver' in payload
 
 export const normalizeAuthPayload = (
   role: UserRole,
-  payload: OwnerAuthResponse | DispatcherAuthResponse,
+  payload: OwnerAuthResponse | DispatcherAuthResponse | DriverAuthResponse,
 ): {
   accessToken: string
   role: UserRole
-  user: OwnerAuthResponse['owner'] | DispatcherAuthResponse['dispatcher']
+  user: OwnerAuthResponse['owner'] | DispatcherAuthResponse['dispatcher'] | DriverAuthResponse['driver']
 } => {
   if (role === 'owner' && isOwnerAuthResponse(payload)) {
     return {
@@ -25,7 +29,15 @@ export const normalizeAuthPayload = (
     return {
       accessToken: payload.access_token,
       role,
-      user: payload.dispatcher,
+      user: (payload as DispatcherAuthResponse).dispatcher,
+    }
+  }
+
+  if (role === 'driver' && !isOwnerAuthResponse(payload) && isDriverAuthResponse(payload)) {
+    return {
+      accessToken: payload.access_token,
+      role,
+      user: payload.driver,
     }
   }
 

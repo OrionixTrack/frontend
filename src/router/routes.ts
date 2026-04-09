@@ -69,9 +69,10 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/accept-invitation',
+    path: '/auth/accept-invitation',
     name: 'accept-invitation',
     component: () => import('@/views/AuthView.vue'),
+    alias: ['/accept-invitation'],
     meta: {
       guestOnly: true,
     },
@@ -82,13 +83,22 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/DashboardView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['owner', 'dispatcher'],
+      roles: ['owner', 'dispatcher', 'driver'],
     },
   },
   {
     path: '/owner/settings',
     name: 'owner-settings',
     component: () => import('@/views/OwnerSettingsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
+    path: '/owner/invitations',
+    name: 'owner-invitations',
+    component: () => import('@/views/InvitationsView.vue'),
     meta: {
       requiresAuth: true,
       roles: ['owner'],

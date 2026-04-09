@@ -7,6 +7,7 @@ export type {
   AuthMode,
   AuthScreenUi,
   DispatcherAuthResponse,
+  DriverAuthResponse,
   LoginCredentials,
   OwnerAuthResponse,
   RegisterOwnerPayload,

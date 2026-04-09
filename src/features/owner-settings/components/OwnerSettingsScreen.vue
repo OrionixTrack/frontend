@@ -40,6 +40,7 @@ const emit = defineEmits<{
   <WorkspaceShell
     :session="session"
     :active-profile="activeProfile"
+    :is-loading="isLoading"
     :locale="locale"
     :messages="messages"
     :theme="theme"
@@ -47,10 +48,6 @@ const emit = defineEmits<{
     @logout="emit('logout')"
     @update-theme="emit('updateTheme', $event)"
   >
-    <div v-if="isLoading" class="panel">
-      {{ messages.common.loading }}
-    </div>
-
     <section class="dashboard-grid settings-grid">
       <article class="panel settings-panel">
         <div class="panel-header">

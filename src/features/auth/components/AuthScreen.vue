@@ -8,7 +8,6 @@ import AppBrand from '@shared/components/AppBrand.vue'
 import AppHeaderActions from '@shared/components/AppHeaderActions.vue'
 import BaseButton from '@shared/components/BaseButton.vue'
 import BaseInput from '@shared/components/BaseInput.vue'
-import LocaleSwitch from '@shared/components/LocaleSwitch.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale } from '@shared/i18n/translations'
 import type { UserRole } from '@shared/types'
@@ -22,6 +21,7 @@ const props = defineProps<{
   authInfo: string
   authSuccess: string
   hasToken: boolean
+  hasAcceptInvitationErrorState: boolean
   isPrimaryActionDisabled: boolean
   isSubmitDisabled: boolean
   isSubmitting: boolean
@@ -48,7 +48,6 @@ const emit = defineEmits<{
 }>()
 
 const showsRoleSwitch = computed(() => props.mode === 'login' || props.mode === 'forgot-password')
-const showsLanguage = computed(() => props.mode === 'accept-invitation')
 const showsEmail = computed(
   () =>
     props.mode === 'login' ||
@@ -63,7 +62,9 @@ const showsNewPassword = computed(() => props.mode === 'reset-password')
 const showsFullName = computed(() => props.mode === 'register')
 const showsCompanyName = computed(() => props.mode === 'register')
 const showsInvitationNames = computed(() => props.mode === 'accept-invitation')
-const showsForm = computed(() => props.mode !== 'verify-email' && props.mode !== 'check-email')
+const showsForm = computed(
+  () => props.mode !== 'verify-email' && props.mode !== 'check-email' && !props.hasAcceptInvitationErrorState,
+)
 const showsTokenWarning = computed(
   () =>
     !props.hasToken &&
@@ -169,11 +170,6 @@ const updateNewPassword = (value: string): void => emit('updateNewPassword', val
                 @update:model-value="updateSurname"
               />
             </label>
-
-            <div v-if="showsLanguage" class="field">
-              <span>{{ ui.selectedLanguage }}</span>
-              <LocaleSwitch :locale="locale" @change="emit('updateLocale', $event)" />
-            </div>
 
             <label v-if="showsEmail" class="field" for="auth-email">
               <span>{{ ui.email }}</span>

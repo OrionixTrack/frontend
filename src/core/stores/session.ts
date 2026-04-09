@@ -1,8 +1,8 @@
 import { computed, reactive, readonly, type ComputedRef } from 'vue'
 
-import type { DispatcherUser, OwnerUser, SessionState, UserRole } from '@shared/types'
+import type { DispatcherUser, DriverUser, OwnerUser, SessionState, UserRole } from '@shared/types'
 
-type SessionUser = OwnerUser | DispatcherUser
+type SessionUser = OwnerUser | DispatcherUser | DriverUser
 const STORAGE_KEY = 'orionixtrack.session'
 
 interface PersistedSession {
@@ -89,7 +89,7 @@ const createSessionStore = (): SessionStore => {
 
         if (
           typeof parsed.accessToken === 'string' &&
-          (parsed.role === 'owner' || parsed.role === 'dispatcher') &&
+          (parsed.role === 'owner' || parsed.role === 'dispatcher' || parsed.role === 'driver') &&
           parsed.user
         ) {
           state.accessToken = parsed.accessToken

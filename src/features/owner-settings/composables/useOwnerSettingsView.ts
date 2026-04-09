@@ -1,6 +1,7 @@
 import { reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { getSafeErrorMessage } from '@core/api'
 import { useSessionStore } from '@core/stores/session'
 import { getOwnerProfile, updateOwnerCompany, updateOwnerProfile } from '@features/owner-settings/api/owner-settings.api'
 import { useApiState } from '@shared/composables/useApiState'
@@ -50,7 +51,7 @@ export const useOwnerSettingsView = () => {
     try {
       const profile = await executePage(
         () => getOwnerProfile(signal),
-        (error) => (error instanceof Error ? error.message : messages.value.ownerSettings.loadError),
+        (error) => getSafeErrorMessage(error, messages.value.ownerSettings.loadError),
       )
 
       activeProfile.value = profile
@@ -106,7 +107,7 @@ export const useOwnerSettingsView = () => {
             full_name: form.profileName.trim(),
             language: form.profileLanguage,
           }),
-        (error) => (error instanceof Error ? error.message : messages.value.ownerSettings.saveError),
+        (error) => getSafeErrorMessage(error, messages.value.ownerSettings.saveError),
       )
 
       const profile = await getOwnerProfile()
@@ -133,7 +134,7 @@ export const useOwnerSettingsView = () => {
           updateOwnerCompany({
             name: form.companyName.trim(),
           }),
-        (error) => (error instanceof Error ? error.message : messages.value.ownerSettings.saveError),
+        (error) => getSafeErrorMessage(error, messages.value.ownerSettings.saveError),
       )
 
       const profile = await getOwnerProfile()

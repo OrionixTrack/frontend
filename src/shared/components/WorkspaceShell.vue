@@ -14,6 +14,7 @@ import type { SessionState } from '@shared/types'
 const props = defineProps<{
   session: Readonly<SessionState>
   activeProfile: SessionState['user']
+  isLoading?: boolean
   locale: Locale
   messages: TranslationDictionary
   theme: AppTheme
@@ -116,7 +117,15 @@ watch(
         </div>
       </header>
 
-      <slot />
+      <div class="workspace-content">
+        <slot />
+
+        <div v-if="isLoading" class="workspace-loader-overlay" aria-live="polite" aria-busy="true">
+          <div class="workspace-loader">
+            <span class="workspace-loader-spinner" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>

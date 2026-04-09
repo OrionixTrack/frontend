@@ -1,7 +1,12 @@
 import { useSessionStore } from '@core/stores/session'
 import { router } from '@/router'
 
-import { ApiError } from './errors'
+import {
+  ApiError,
+  createNetworkUnavailableError,
+  createRequestTimeoutError,
+  getRequestFailedMessage,
+} from './errors'
 
 const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, '')
 
@@ -119,41 +124,60 @@ const requestJson = async <TResponse>(
   } = options
   const { getAccessToken } = useSessionStore()
   const { signal: timeoutSignal, cleanup } = createTimeoutSignal(timeoutMs, signal)
+  let response: Response
 
   try {
-    const response = await fetch(buildUrl(path, query), {
+    response = await fetch(buildUrl(path, query), {
       method,
       headers: buildHeaders(auth ? getAccessToken() : null),
       body: body ? JSON.stringify(body) : undefined,
       signal: timeoutSignal,
     })
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        handleUnauthorizedResponse()
-      }
-
-      const message = (await parseErrorMessage(response)) || 'Request failed.'
-      throw new ApiError(message, response.status)
+  } catch (error) {
+    if (signal?.aborted) {
+      throw error
     }
 
-    if (response.status === 204) {
-      return null as TResponse
+    if (error instanceof ApiError) {
+      throw error
     }
 
-    const text = await response.text()
-
-    if (!text) {
-      return null as TResponse
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw createRequestTimeoutError()
     }
 
-    try {
-      return JSON.parse(text) as TResponse
-    } catch {
-      return text as TResponse
+    if (error instanceof TypeError) {
+      throw createNetworkUnavailableError()
     }
+
+    throw createNetworkUnavailableError()
   } finally {
     cleanup()
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorizedResponse()
+    }
+
+    const message = (await parseErrorMessage(response)) || getRequestFailedMessage()
+    throw new ApiError(message, response.status)
+  }
+
+  if (response.status === 204) {
+    return null as TResponse
+  }
+
+  const text = await response.text()
+
+  if (!text) {
+    return null as TResponse
+  }
+
+  try {
+    return JSON.parse(text) as TResponse
+  } catch {
+    return text as TResponse
   }
 }
 

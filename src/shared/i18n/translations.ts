@@ -9,8 +9,10 @@ export interface TranslationDictionary {
     heroDescription: string
     roleOwner: string
     roleDispatcher: string
+    roleDriver: string
     ownerDescription: string
     dispatcherDescription: string
+    driverDescription: string
     email: string
     password: string
     newPassword: string
@@ -23,6 +25,7 @@ export interface TranslationDictionary {
     signInDispatcher: string
     signIn: string
     signingIn: string
+    invalidCredentials: string
     signInError: string
     createOwnerAccount: string
     creatingOwnerAccount: string
@@ -60,6 +63,9 @@ export interface TranslationDictionary {
     acceptInvitationAction: string
     acceptingInvitation: string
     acceptInvitationSuccess: string
+    acceptInvitationInvalid: string
+    acceptInvitationExpired: string
+    acceptInvitationUsed: string
     backToLogin: string
     registerLink: string
     resendVerificationLink: string
@@ -73,6 +79,7 @@ export interface TranslationDictionary {
   common: {
     language: string
     menu: string
+    close: string
     signOut: string
     loading: string
     profile: string
@@ -86,6 +93,7 @@ export interface TranslationDictionary {
   dashboard: {
     workspaceOwner: string
     workspaceDispatcher: string
+    workspaceDriver: string
     loadError: string
     roleViewTitle: string
     ownerPulse: string
@@ -100,6 +108,7 @@ export interface TranslationDictionary {
     dispatcherAssignments: string
     dispatcherChannels: string
     dispatcherMap: string
+    driverTrips: string
     latestTrips: string
     noTrips: string
     noDestination: string
@@ -111,6 +120,40 @@ export interface TranslationDictionary {
     inProgress: string
     completed: string
     cancelled: string
+  }
+  invitations: {
+    pageTitle: string
+    openInviteDialog: string
+    inviteTitle: string
+    inviteDescription: string
+    invalidEmail: string
+    searchPlaceholder: string
+    newestFirst: string
+    oldestFirst: string
+    previousPage: string
+    nextPage: string
+    pageLabel: string
+    email: string
+    role: string
+    roleDriver: string
+    roleDispatcher: string
+    sendInvite: string
+    sendingInvite: string
+    inviteSent: string
+    loadError: string
+    createError: string
+    listTitle: string
+    empty: string
+    emptySearch: string
+    status: string
+    statusPending: string
+    statusAccepted: string
+    statusExpired: string
+    createdAt: string
+    expiresAt: string
+    acceptedAt: string
+    alreadyRegistered: string
+    alreadyInvited: string
   }
   ownerSettings: {
     pageTitle: string
@@ -130,6 +173,9 @@ export interface TranslationDictionary {
   errors: {
     notFoundTitle: string
     notFoundDescription: string
+    networkUnavailable: string
+    requestFailed: string
+    requestTimeout: string
   }
 }
 
@@ -141,8 +187,10 @@ export const translations: Record<Locale, TranslationDictionary> = {
       heroDescription: '',
       roleOwner: 'Company Owner',
       roleDispatcher: 'Dispatcher',
+      roleDriver: 'Driver',
       ownerDescription: 'Access for the company owner',
       dispatcherDescription: 'Access for the dispatcher',
+      driverDescription: 'Access for the driver',
       email: 'Email',
       password: 'Password',
       newPassword: 'New password',
@@ -155,6 +203,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       signInDispatcher: 'Dispatcher',
       signIn: 'Sign in',
       signingIn: 'Signing in...',
+      invalidCredentials: 'Incorrect email or password.',
       signInError: 'Unable to sign in.',
       createOwnerAccount: 'Create owner account',
       creatingOwnerAccount: 'Creating account...',
@@ -188,10 +237,13 @@ export const translations: Record<Locale, TranslationDictionary> = {
       resettingPassword: 'Updating password...',
       resetPasswordSuccess: 'Password updated. You can now sign in.',
       acceptInvitationTitle: 'Accept invitation',
-      acceptInvitationDescription: 'Create the invited employee account and save the preferred language.',
+      acceptInvitationDescription: 'Create the invited employee account and continue to the workspace.',
       acceptInvitationAction: 'Create account',
       acceptingInvitation: 'Creating account...',
       acceptInvitationSuccess: 'Invitation accepted. Sign in with the new credentials.',
+      acceptInvitationInvalid: 'This invitation link is invalid.',
+      acceptInvitationExpired: 'This invitation link has expired.',
+      acceptInvitationUsed: 'This invitation link has already been used or is no longer valid.',
       backToLogin: 'Back to sign in',
       registerLink: 'Create owner account',
       resendVerificationLink: 'Resend verification email',
@@ -205,6 +257,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     common: {
       language: 'Language',
       menu: 'Menu',
+      close: 'Close',
       signOut: 'Sign out',
       loading: 'Loading...',
       profile: 'Profile',
@@ -218,6 +271,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     dashboard: {
       workspaceOwner: 'Company Owner workspace',
       workspaceDispatcher: 'Dispatcher workspace',
+      workspaceDriver: 'Driver workspace',
       loadError: 'Dashboard data could not be loaded.',
       roleViewTitle: 'Trips',
       ownerPulse: 'Company pulse',
@@ -232,6 +286,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       dispatcherAssignments: 'Assignments',
       dispatcherChannels: 'Channels',
       dispatcherMap: 'Live map',
+      driverTrips: 'My trips',
       latestTrips: 'Latest trips',
       noTrips: 'No trips returned yet for the current dispatcher.',
       noDestination: 'No destination',
@@ -243,6 +298,40 @@ export const translations: Record<Locale, TranslationDictionary> = {
       inProgress: 'In progress',
       completed: 'Completed',
       cancelled: 'Cancelled',
+    },
+    invitations: {
+      pageTitle: 'Invitations',
+      openInviteDialog: 'New invitation',
+      inviteTitle: 'Invite employee',
+      inviteDescription: 'Send an invitation by email and track its status below.',
+      invalidEmail: 'Enter a valid email address.',
+      searchPlaceholder: 'Search by email',
+      newestFirst: 'Newest first',
+      oldestFirst: 'Oldest first',
+      previousPage: 'Previous',
+      nextPage: 'Next',
+      pageLabel: 'Page {page}',
+      email: 'Email',
+      role: 'Role',
+      roleDriver: 'Driver',
+      roleDispatcher: 'Dispatcher',
+      sendInvite: 'Send invitation',
+      sendingInvite: 'Sending invitation...',
+      inviteSent: 'Invitation sent.',
+      loadError: 'Invitations could not be loaded.',
+      createError: 'Invitation could not be created.',
+      listTitle: 'Invitation history',
+      empty: 'No invitations have been sent yet.',
+      emptySearch: 'No invitations match your search.',
+      status: 'Status',
+      statusPending: 'Pending',
+      statusAccepted: 'Accepted',
+      statusExpired: 'Expired',
+      createdAt: 'Created',
+      expiresAt: 'Expires',
+      acceptedAt: 'Accepted',
+      alreadyRegistered: 'A user with this email already exists.',
+      alreadyInvited: 'An invitation has already been sent to this email.',
     },
     ownerSettings: {
       pageTitle: 'Company settings',
@@ -262,6 +351,9 @@ export const translations: Record<Locale, TranslationDictionary> = {
     errors: {
       notFoundTitle: '404',
       notFoundDescription: 'The requested page does not exist.',
+      networkUnavailable: 'Unable to connect to the server right now. Please try again in a moment.',
+      requestFailed: 'Something went wrong while processing the request.',
+      requestTimeout: 'The server is taking too long to respond. Please try again.',
     },
   },
   uk: {
@@ -271,8 +363,10 @@ export const translations: Record<Locale, TranslationDictionary> = {
       heroDescription: '',
       roleOwner: 'Власник компанії',
       roleDispatcher: 'Диспетчер',
+      roleDriver: 'Водій',
       ownerDescription: 'Доступ для власника компанії',
       dispatcherDescription: 'Доступ для диспетчера',
+      driverDescription: 'Доступ для водія',
       email: 'Email',
       password: 'Пароль',
       newPassword: 'Новий пароль',
@@ -285,6 +379,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       signInDispatcher: 'Диспетчер',
       signIn: 'Увійти',
       signingIn: 'Вхід...',
+      invalidCredentials: 'Неправильний email або пароль.',
       signInError: 'Не вдалося виконати вхід.',
       createOwnerAccount: 'Створити акаунт власника',
       creatingOwnerAccount: 'Створення акаунта...',
@@ -317,11 +412,14 @@ export const translations: Record<Locale, TranslationDictionary> = {
       resetPasswordAction: 'Встановити новий пароль',
       resettingPassword: 'Оновлення пароля...',
       resetPasswordSuccess: 'Пароль оновлено. Тепер можна увійти.',
-      acceptInvitationTitle: 'Прийняття інвайту',
-      acceptInvitationDescription: 'Створіть акаунт запрошеного працівника та збережіть бажану мову.',
+      acceptInvitationTitle: 'Прийняття запрошення',
+      acceptInvitationDescription: 'Створіть акаунт запрошеного працівника і продовжіть роботу в системі.',
       acceptInvitationAction: 'Створити акаунт',
       acceptingInvitation: 'Створення акаунта...',
       acceptInvitationSuccess: 'Інвайт прийнято. Увійдіть з новими даними.',
+      acceptInvitationInvalid: 'Це посилання запрошення недійсне.',
+      acceptInvitationExpired: 'Термін дії цього запрошення минув.',
+      acceptInvitationUsed: 'Цей інвайт уже використано або він більше недійсний.',
       backToLogin: 'Повернутися до входу',
       registerLink: 'Створити акаунт власника',
       resendVerificationLink: 'Повторно надіслати лист',
@@ -335,6 +433,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     common: {
       language: 'Мова',
       menu: 'Меню',
+      close: 'Закрити',
       signOut: 'Вийти',
       loading: 'Завантаження...',
       profile: 'Профіль',
@@ -348,6 +447,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     dashboard: {
       workspaceOwner: 'Робочий простір власника компанії',
       workspaceDispatcher: 'Робочий простір диспетчера',
+      workspaceDriver: 'Робочий простір водія',
       loadError: 'Не вдалося завантажити дані дашборду.',
       roleViewTitle: 'Рейси',
       ownerPulse: 'Стан компанії',
@@ -362,6 +462,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       dispatcherAssignments: 'Призначення',
       dispatcherChannels: 'Канали',
       dispatcherMap: 'Жива карта',
+      driverTrips: 'Мої рейси',
       latestTrips: 'Останні рейси',
       noTrips: 'Для поточного диспетчера рейси поки не повернулися.',
       noDestination: 'Немає пункту призначення',
@@ -373,6 +474,40 @@ export const translations: Record<Locale, TranslationDictionary> = {
       inProgress: 'У процесі',
       completed: 'Завершені',
       cancelled: 'Скасовані',
+    },
+    invitations: {
+      pageTitle: 'Інвайти',
+      openInviteDialog: 'Новий інвайт',
+      inviteTitle: 'Запросити працівника',
+      inviteDescription: 'Надішліть інвайт на email і відстежуйте його статус нижче.',
+      invalidEmail: 'Введіть коректний email.',
+      searchPlaceholder: 'Пошук за email',
+      newestFirst: 'Спочатку нові',
+      oldestFirst: 'Спочатку старі',
+      previousPage: 'Назад',
+      nextPage: 'Далі',
+      pageLabel: 'Сторінка {page}',
+      email: 'Email',
+      role: 'Роль',
+      roleDriver: 'Водій',
+      roleDispatcher: 'Диспетчер',
+      sendInvite: 'Надіслати інвайт',
+      sendingInvite: 'Надсилання інвайту...',
+      inviteSent: 'Інвайт надіслано.',
+      loadError: 'Не вдалося завантажити інвайти.',
+      createError: 'Не вдалося створити інвайт.',
+      listTitle: 'Історія інвайтів',
+      empty: 'Інвайтів ще не було надіслано.',
+      emptySearch: 'За вашим запитом інвайтів не знайдено.',
+      status: 'Статус',
+      statusPending: 'Очікує',
+      statusAccepted: 'Прийнято',
+      statusExpired: 'Прострочено',
+      createdAt: 'Створено',
+      expiresAt: 'Діє до',
+      acceptedAt: 'Прийнято',
+      alreadyRegistered: 'Користувач з таким email уже існує.',
+      alreadyInvited: 'На цей email уже відправлено інвайт.',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',
@@ -392,9 +527,16 @@ export const translations: Record<Locale, TranslationDictionary> = {
     errors: {
       notFoundTitle: '404',
       notFoundDescription: 'Запитувана сторінка не існує.',
+      networkUnavailable: "Не вдалося з'єднатися із сервером. Спробуйте ще раз трохи пізніше.",
+      requestFailed: 'Не вдалося обробити запит. Спробуйте ще раз.',
+      requestTimeout: 'Сервер відповідає надто довго. Спробуйте ще раз.',
     },
   },
 }
 
 export const getRoleLabel = (locale: Locale, role: UserRole): string =>
-  role === 'owner' ? translations[locale].auth.roleOwner : translations[locale].auth.roleDispatcher
+  role === 'owner'
+    ? translations[locale].auth.roleOwner
+    : role === 'dispatcher'
+      ? translations[locale].auth.roleDispatcher
+      : translations[locale].auth.roleDriver

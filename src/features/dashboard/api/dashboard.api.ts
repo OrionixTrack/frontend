@@ -1,5 +1,5 @@
 import { getJson } from '@core/api'
-import type { DispatcherUser, OwnerUser } from '@shared/types'
+import type { DispatcherUser, DriverUser, OwnerUser } from '@shared/types'
 import type { OwnerStatsResponse, TripResponse } from '@features/dashboard/types'
 
 export const getOwnerProfile = (signal?: AbortSignal): Promise<OwnerUser> =>
@@ -13,3 +13,9 @@ export const getDispatcherProfile = (signal?: AbortSignal): Promise<DispatcherUs
 
 export const getDispatcherTrips = (signal?: AbortSignal): Promise<TripResponse[]> =>
   getJson<TripResponse[]>('/dispatcher/trips', { signal })
+
+export const getDriverProfile = (signal?: AbortSignal): Promise<DriverUser> =>
+  getJson<DriverUser>('/driver/profile', { signal })
+
+export const getDriverTrips = (signal?: AbortSignal): Promise<TripResponse[]> =>
+  getJson<TripResponse[]>('/driver/trips', { signal })

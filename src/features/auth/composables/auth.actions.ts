@@ -1,7 +1,7 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { Router } from 'vue-router'
 
-import { isApiError } from '@core/api/errors'
+import { getSafeErrorMessage, isApiError } from '@core/api/errors'
 import { useSessionStore } from '@core/stores/session'
 import {
   ResendVerificationRateLimitError,
@@ -19,12 +19,17 @@ import type {
   AuthMode,
   AuthScreenUi,
   DispatcherAuthResponse,
+  DriverAuthResponse,
   OwnerAuthResponse,
 } from '@features/auth/types'
 import type { TranslationDictionary } from '@shared/i18n/translations'
 
 export const AUTH_ERROR_CODES = {
+  acceptInvitationExpired: 'auth.acceptInvitationExpired',
+  acceptInvitationInvalid: 'auth.acceptInvitationInvalid',
+  acceptInvitationUsed: 'auth.acceptInvitationUsed',
   emailNotVerified: 'auth.emailNotVerified',
+  invalidCredentials: 'auth.invalidCredentials',
   signInError: 'auth.signInError',
   resendTooSoon: 'auth.resendTooSoon',
   verifyEmailError: 'auth.verifyEmailError',
@@ -77,14 +82,10 @@ export const createAuthActions = ({
 }: CreateAuthActionsArgs) => {
   const handleVerificationError = (error: unknown): string => {
     if (isApiError(error) && error.status === 400) {
-      if (/already verified/i.test(error.message)) {
-        return error.message
-      }
-
       return AUTH_ERROR_CODES.verifyEmailInvalid
     }
 
-    return error instanceof Error ? error.message : AUTH_ERROR_CODES.verifyEmailError
+    return getSafeErrorMessage(error, AUTH_ERROR_CODES.verifyEmailError)
   }
 
   const handleResendError = (error: unknown): string => {
@@ -93,7 +94,7 @@ export const createAuthActions = ({
       return AUTH_ERROR_CODES.resendTooSoon
     }
 
-    return error instanceof Error ? error.message : AUTH_ERROR_CODES.verifyEmailError
+    return getSafeErrorMessage(error, AUTH_ERROR_CODES.verifyEmailError)
   }
 
   const resendVerification = async (email: string, signal: AbortSignal): Promise<void> => {
@@ -124,7 +125,7 @@ export const createAuthActions = ({
               },
               controller.signal,
             ),
-          (error) => (error instanceof Error ? error.message : AUTH_ERROR_CODES.signInError),
+          (error) => getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError),
         )
 
         unverifiedOwnerEmail.value = payload.email
@@ -189,7 +190,7 @@ export const createAuthActions = ({
               },
               controller.signal,
             ),
-          (error) => (error instanceof Error ? error.message : AUTH_ERROR_CODES.signInError),
+          (error) => getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError),
         )
         authSuccess.value = authUi.value.successMessage
         return
@@ -208,7 +209,7 @@ export const createAuthActions = ({
               },
               controller.signal,
             ),
-          (error) => (error instanceof Error ? error.message : AUTH_ERROR_CODES.signInError),
+          (error) => getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError),
         )
         form.value.password = ''
         form.value.newPassword = ''
@@ -220,7 +221,7 @@ export const createAuthActions = ({
           throw new Error(authUi.value.tokenRequired)
         }
 
-        await execute(
+        const payload = await execute(
           () =>
             acceptInvitationRequest(
               {
@@ -232,10 +233,31 @@ export const createAuthActions = ({
               },
               controller.signal,
             ),
-          (error) => (error instanceof Error ? error.message : AUTH_ERROR_CODES.signInError),
+          (error) => {
+            if (isApiError(error) && error.status === 400) {
+              if (/expired/i.test(error.message)) {
+                return AUTH_ERROR_CODES.acceptInvitationExpired
+              }
+
+              if (/no longer valid|already/i.test(error.message)) {
+                return AUTH_ERROR_CODES.acceptInvitationUsed
+              }
+
+              return AUTH_ERROR_CODES.acceptInvitationInvalid
+            }
+
+            return getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError)
+          },
         )
         form.value.password = ''
+        const normalizedPayload =
+          'dispatcher' in payload
+            ? normalizeAuthPayload('dispatcher', payload)
+            : normalizeAuthPayload('driver', payload as DriverAuthResponse)
+        sessionStore.setSession(normalizedPayload)
         authSuccess.value = authUi.value.successMessage
+        await wait(700)
+        await router.replace({ name: 'dashboard' })
         return
       }
       default: {
@@ -257,7 +279,11 @@ export const createAuthActions = ({
                 return AUTH_ERROR_CODES.emailNotVerified
               }
 
-              return error instanceof Error ? error.message : AUTH_ERROR_CODES.signInError
+              if (isApiError(error) && error.status === 401) {
+                return AUTH_ERROR_CODES.invalidCredentials
+              }
+
+              return getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError)
             },
           )
         } catch (error) {

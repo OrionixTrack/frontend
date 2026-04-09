@@ -1,6 +1,7 @@
 import type { OwnerStatsResponse, StatItem, TripResponse } from '@features/dashboard/types'
 import type {
   DispatcherUser,
+  DriverUser,
   OwnerUser,
   UserRole,
 } from '@shared/types'
@@ -66,10 +67,10 @@ export const formatDispatcherStats = (
   ]
 }
 
-const isOwnerUser = (profile: OwnerUser | DispatcherUser): profile is OwnerUser =>
+const isOwnerUser = (profile: OwnerUser | DispatcherUser | DriverUser): profile is OwnerUser =>
   'full_name' in profile
 
-const isDispatcherUser = (profile: OwnerUser | DispatcherUser): profile is DispatcherUser =>
+const isEmployeeUser = (profile: OwnerUser | DispatcherUser | DriverUser): profile is DispatcherUser | DriverUser =>
   'name' in profile && 'surname' in profile
 
 export const getRoleLabel = (locale: Locale, role: UserRole | null): string =>
@@ -77,7 +78,7 @@ export const getRoleLabel = (locale: Locale, role: UserRole | null): string =>
 
 export const getUserDisplayName = (
   role: UserRole | null,
-  profile: OwnerUser | DispatcherUser | null,
+  profile: OwnerUser | DispatcherUser | DriverUser | null,
 ): string => {
   if (!profile) {
     return ''
@@ -87,7 +88,7 @@ export const getUserDisplayName = (
     return profile.full_name
   }
 
-  if (isDispatcherUser(profile)) {
+  if (isEmployeeUser(profile)) {
     return `${profile.name} ${profile.surname}`.trim()
   }
 
@@ -107,6 +108,7 @@ export const getRoleNavigation = (
           items: [
             { id: 'overview', label: t.common.overview, routeName: 'dashboard' },
             { id: 'company', label: t.dashboard.ownerCompany, routeName: 'owner-settings' },
+            { id: 'invitations', label: t.invitations.pageTitle, routeName: 'owner-invitations' },
             { id: 'employees', label: t.dashboard.ownerEmployees, routeName: null },
             { id: 'fleet', label: t.dashboard.ownerFleet, routeName: null },
             { id: 'trackers', label: t.dashboard.ownerTrackers, routeName: null },
@@ -120,10 +122,14 @@ export const getRoleNavigation = (
           title: '',
           items: [
             { id: 'overview', label: t.common.overview, routeName: 'dashboard' },
-            { id: 'trips', label: t.dashboard.dispatcherTrips, routeName: null },
-            { id: 'assignments', label: t.dashboard.dispatcherAssignments, routeName: null },
-            { id: 'channels', label: t.dashboard.dispatcherChannels, routeName: null },
-            { id: 'map', label: t.dashboard.dispatcherMap, routeName: null },
+            ...(role === 'dispatcher'
+              ? [
+                  { id: 'trips', label: t.dashboard.dispatcherTrips, routeName: null },
+                  { id: 'assignments', label: t.dashboard.dispatcherAssignments, routeName: null },
+                  { id: 'channels', label: t.dashboard.dispatcherChannels, routeName: null },
+                  { id: 'map', label: t.dashboard.dispatcherMap, routeName: null },
+                ]
+              : [{ id: 'trips', label: t.dashboard.driverTrips, routeName: null }]),
           ],
         },
       ]
@@ -144,6 +150,3 @@ export const getTripStatusLabel = (
       return messages.dashboard.cancelled
   }
 }
-
-export const getUserAvatarLetter = (displayName: string): string =>
-  Array.from(displayName.trim())[0]?.toUpperCase() ?? '?'

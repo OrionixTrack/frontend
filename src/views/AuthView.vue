@@ -5,6 +5,7 @@ const {
   authError,
   authInfo,
   authSuccess,
+  hasAcceptInvitationErrorState,
   isSubmitting,
   isPrimaryActionDisabled,
   isSubmitDisabled,
@@ -42,6 +43,7 @@ const {
     :auth-error="authError"
     :auth-info="authInfo"
     :auth-success="authSuccess"
+    :has-accept-invitation-error-state="hasAcceptInvitationErrorState"
     :has-token="hasToken"
     :is-primary-action-disabled="isPrimaryActionDisabled"
     :is-submit-disabled="isSubmitDisabled"

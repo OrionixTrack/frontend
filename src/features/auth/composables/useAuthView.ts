@@ -92,8 +92,16 @@ export const useAuthView = () => {
   const authUi = computed(() => createAuthUi(messages.value, mode.value, authHeading.value))
   const localizedAuthError = computed(() => {
     switch (authError.value) {
+      case AUTH_ERROR_CODES.acceptInvitationExpired:
+        return messages.value.auth.acceptInvitationExpired
+      case AUTH_ERROR_CODES.acceptInvitationInvalid:
+        return messages.value.auth.acceptInvitationInvalid
+      case AUTH_ERROR_CODES.acceptInvitationUsed:
+        return messages.value.auth.acceptInvitationUsed
       case AUTH_ERROR_CODES.emailNotVerified:
         return messages.value.auth.emailNotVerified
+      case AUTH_ERROR_CODES.invalidCredentials:
+        return messages.value.auth.invalidCredentials
       case AUTH_ERROR_CODES.signInError:
         return messages.value.auth.signInError
       case AUTH_ERROR_CODES.resendTooSoon:
@@ -108,6 +116,15 @@ export const useAuthView = () => {
   })
   const resendCooldownMessage = computed(() =>
     createResendCooldownMessage(messages.value, resendCooldownSeconds.value),
+  )
+  const hasAcceptInvitationErrorState = computed(
+    () =>
+      mode.value === 'accept-invitation' &&
+      [
+        AUTH_ERROR_CODES.acceptInvitationExpired,
+        AUTH_ERROR_CODES.acceptInvitationInvalid,
+        AUTH_ERROR_CODES.acceptInvitationUsed,
+      ].includes(authError.value as (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES]),
   )
   const helperLinks = computed(() =>
     createHelperLinks({
@@ -189,6 +206,7 @@ export const useAuthView = () => {
     form,
     hasToken,
     helperLinks,
+    hasAcceptInvitationErrorState,
     isPrimaryActionDisabled,
     isSubmitDisabled,
     isSubmitting,

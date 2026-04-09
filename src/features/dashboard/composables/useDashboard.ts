@@ -1,8 +1,11 @@
 import { computed, reactive, watch, type ComputedRef } from 'vue'
 
+import { getSafeErrorMessage } from '@core/api'
 import {
   getDispatcherProfile,
   getDispatcherTrips,
+  getDriverProfile,
+  getDriverTrips,
   getOwnerProfile,
   getOwnerStats,
 } from '@features/dashboard/api/dashboard.api'
@@ -10,15 +13,15 @@ import { formatDispatcherStats, formatOwnerStats } from '@features/dashboard/pre
 import { useApiState } from '@shared/composables/useApiState'
 import type { DashboardState, OwnerStatsResponse, TripResponse } from '@features/dashboard/types'
 import type { TranslationDictionary } from '@shared/i18n/translations'
-import type { DispatcherUser, OwnerUser, SessionState } from '@shared/types'
+import type { DispatcherUser, DriverUser, OwnerUser, SessionState } from '@shared/types'
 
 export const useDashboard = (
   session: Readonly<SessionState>,
   messages: () => TranslationDictionary,
-  updateUser: (user: OwnerUser | DispatcherUser) => void,
+  updateUser: (user: OwnerUser | DispatcherUser | DriverUser) => void,
 ): {
   dashboardState: Readonly<DashboardState>
-  activeProfile: ComputedRef<OwnerUser | DispatcherUser | null>
+  activeProfile: ComputedRef<OwnerUser | DispatcherUser | DriverUser | null>
   resetDashboardState: () => void
   reloadDashboard: () => Promise<void>
 } => {
@@ -83,6 +86,20 @@ export const useDashboard = (
     applyLocalizedStats()
   }
 
+  const loadDriverData = async (signal?: AbortSignal): Promise<void> => {
+    const [profile, trips] = await Promise.all([
+      getDriverProfile(signal),
+      getDriverTrips(signal),
+    ])
+
+    dispatcherTripsPayload = Array.isArray(trips) ? trips : []
+    ownerStatsPayload = null
+    state.profile = profile
+    state.trips = dispatcherTripsPayload.slice(0, 5)
+    updateUser(profile)
+    applyLocalizedStats()
+  }
+
   const loadDashboard = async (signal?: AbortSignal): Promise<void> => {
     if (!session.accessToken || !session.role) {
       resetDashboardState()
@@ -92,9 +109,13 @@ export const useDashboard = (
 
     try {
       await execute(
-        () => (session.role === 'owner' ? loadOwnerData(signal) : loadDispatcherData(signal)),
-        (errorValue) =>
-          errorValue instanceof Error ? errorValue.message : messages().dashboard.loadError,
+        () =>
+          session.role === 'owner'
+            ? loadOwnerData(signal)
+            : session.role === 'dispatcher'
+              ? loadDispatcherData(signal)
+              : loadDriverData(signal),
+        (errorValue) => getSafeErrorMessage(errorValue, messages().dashboard.loadError),
       )
     } catch {
       return

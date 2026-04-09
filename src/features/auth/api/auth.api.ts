@@ -1,7 +1,8 @@
-import { API_BASE_URL, ApiError, postJson } from '@core/api'
+import { API_BASE_URL, ApiError, createNetworkUnavailableError, createRequestTimeoutError, getRequestFailedMessage, postJson } from '@core/api'
 import type {
   AcceptInvitationPayload,
   DispatcherAuthResponse,
+  DriverAuthResponse,
   LoginCredentials,
   OwnerAuthResponse,
   RegisterOwnerPayload,
@@ -71,13 +72,23 @@ export const resendVerificationRequest = async (
     },
     body: JSON.stringify(payload),
     signal,
+  }).catch((error: unknown) => {
+    if (signal?.aborted) {
+      throw error
+    }
+
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw createRequestTimeoutError()
+    }
+
+    throw createNetworkUnavailableError()
   })
 
   if (response.ok) {
     return
   }
 
-  let message = 'Request failed.'
+  let message = getRequestFailedMessage()
   let retryAfter = 60
 
   try {
@@ -140,8 +151,8 @@ export const resetPasswordRequest = async (
 export const acceptInvitationRequest = async (
   payload: AcceptInvitationPayload,
   signal?: AbortSignal,
-): Promise<void> =>
-  postJson<void>('/auth/accept-invitation', payload, {
+): Promise<DriverAuthResponse | DispatcherAuthResponse> =>
+  postJson<DriverAuthResponse | DispatcherAuthResponse>('/auth/accept-invitation', payload, {
     auth: false,
     signal,
   })
