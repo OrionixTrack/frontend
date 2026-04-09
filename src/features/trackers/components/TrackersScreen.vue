@@ -168,7 +168,7 @@ const copyTrackerToken = async (): Promise<void> => {
     await navigator.clipboard.writeText(props.trackerToken)
     showSnackbar(props.messages.trackers.copySuccess, { tone: 'success' })
   } catch {
-    showSnackbar(props.messages.trackers.copyError, { tone: 'success' })
+    showSnackbar(props.messages.trackers.copyError, { tone: 'error' })
   }
 }
 
@@ -312,10 +312,29 @@ watch(
       <p class="muted-copy">{{ messages.trackers.tokenDialogDescription }}</p>
       <p class="success-banner vehicle-token-banner">
         <strong>{{ messages.trackers.tokenLabel }}</strong>
-        <code>{{ trackerToken }}</code>
-        <BaseButton class="btn btn-secondary tracker-copy-button" @click="copyTrackerToken">
-          {{ messages.trackers.copyToken }}
-        </BaseButton>
+        <span class="vehicle-token-row">
+          <code>{{ trackerToken }}</code>
+          <BaseButton class="tracker-icon-button tracker-copy-button" :aria-label="messages.trackers.copyToken" @click="copyTrackerToken">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h7.5A2.25 2.25 0 0 1 21 9.75v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5A2.25 2.25 0 0 1 9 17.25z"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+              <path
+                d="M15 7.5V6A2.25 2.25 0 0 0 12.75 3.75h-7.5A2.25 2.25 0 0 0 3 6v7.5a2.25 2.25 0 0 0 2.25 2.25H6.75"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.8"
+              />
+            </svg>
+          </BaseButton>
+        </span>
       </p>
     </BaseDialog>
 

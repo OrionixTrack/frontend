@@ -132,6 +132,15 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/owner/channels',
+    name: 'owner-channels',
+    component: () => import('@/views/ChannelsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

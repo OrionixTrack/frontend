@@ -338,6 +338,58 @@ export interface TranslationDictionary {
     deleteConflict: string
     deleteSuccess: string
   }
+  channels: {
+    pageTitle: string
+    listTitle: string
+    description: string
+    createAction: string
+    createTitle: string
+    createDescription: string
+    editTitle: string
+    editDescription: string
+    saveChanges: string
+    saving: string
+    searchLabel: string
+    searchPlaceholder: string
+    sortByLabel: string
+    sortOrderLabel: string
+    ascending: string
+    descending: string
+    sortName: string
+    sortChannelId: string
+    fieldName: string
+    fieldTrip: string
+    searchTripPlaceholder: string
+    validationError: string
+    loadError: string
+    saveError: string
+    tripConflict: string
+    createSuccess: string
+    updateSuccess: string
+    empty: string
+    emptySearch: string
+    unassigned: string
+    copyLink: string
+    copyLinkSuccess: string
+    copyError: string
+    publicLinkLabel: string
+    columnName: string
+    columnTrip: string
+    columnLink: string
+    columnActions: string
+    editAction: string
+    deleteAction: string
+    deleteTitle: string
+    deleteDescription: string
+    confirmDelete: string
+    deleting: string
+    deleteError: string
+    deleteSuccess: string
+    statusPlanned: string
+    statusInProgress: string
+    statusCompleted: string
+    statusCancelled: string
+  }
   ownerSettings: {
     pageTitle: string
     profileTitle: string
@@ -702,6 +754,58 @@ export const translations: Record<Locale, TranslationDictionary> = {
       deleteConflict: 'Tracker cannot be deleted right now.',
       deleteSuccess: 'Tracker deleted successfully.',
     },
+    channels: {
+      pageTitle: 'Channels',
+      listTitle: 'Public tracking channels',
+      description: 'Create public tracking endpoints, bind them to trips, and share public links with clients or partners.',
+      createAction: 'Add channel',
+      createTitle: 'Create channel',
+      createDescription: 'Save a public tracking channel with or without a linked trip.',
+      editTitle: 'Edit channel',
+      editDescription: 'Update the channel name or move it to another trip.',
+      saveChanges: 'Save changes',
+      saving: 'Saving...',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by channel name',
+      sortByLabel: 'Sort by',
+      sortOrderLabel: 'Order',
+      ascending: 'Ascending',
+      descending: 'Descending',
+      sortName: 'Name',
+      sortChannelId: 'Channel ID',
+      fieldName: 'Name',
+      fieldTrip: 'Assigned trip',
+      searchTripPlaceholder: 'Search trips by name or ID',
+      validationError: 'Channel name is required.',
+      loadError: 'Channels could not be loaded.',
+      saveError: 'Channel changes could not be saved.',
+      tripConflict: 'The selected trip was not found or does not belong to this company.',
+      createSuccess: 'Channel created successfully.',
+      updateSuccess: 'Channel updated successfully.',
+      empty: 'No channels created yet.',
+      emptySearch: 'No channels match your search.',
+      unassigned: 'No trip',
+      copyLink: 'Copy link',
+      copyLinkSuccess: 'Public link copied.',
+      copyError: 'Could not copy this value automatically.',
+      publicLinkLabel: 'Public link',
+      columnName: 'Channel',
+      columnTrip: 'Trip',
+      columnLink: 'Public link',
+      columnActions: 'Actions',
+      editAction: 'Edit',
+      deleteAction: 'Delete',
+      deleteTitle: 'Delete channel',
+      deleteDescription: 'Delete this public tracking channel?',
+      confirmDelete: 'Delete channel',
+      deleting: 'Deleting...',
+      deleteError: 'Channel could not be deleted.',
+      deleteSuccess: 'Channel deleted successfully.',
+      statusPlanned: 'Planned',
+      statusInProgress: 'In progress',
+      statusCompleted: 'Completed',
+      statusCancelled: 'Cancelled',
+    },
     ownerSettings: {
       pageTitle: 'Company settings',
       profileTitle: 'Owner profile',
@@ -1064,6 +1168,58 @@ export const translations: Record<Locale, TranslationDictionary> = {
       deleteError: 'Не вдалося видалити трекер.',
       deleteConflict: 'Наразі трекер не можна видалити.',
       deleteSuccess: 'Трекер успішно видалено.',
+    },
+    channels: {
+      pageTitle: 'Канали',
+      listTitle: 'Публічні канали відстеження',
+      description: 'Створюйте публічні точки трекінгу, прив’язуйте їх до рейсів і діліться посиланнями з клієнтами або партнерами.',
+      createAction: 'Додати канал',
+      createTitle: 'Створення каналу',
+      createDescription: 'Збережіть публічний канал відстеження з рейсом або без нього.',
+      editTitle: 'Редагування каналу',
+      editDescription: 'Оновіть назву каналу або переприв’яжіть його до іншого рейсу.',
+      saveChanges: 'Зберегти зміни',
+      saving: 'Збереження...',
+      searchLabel: 'Пошук',
+      searchPlaceholder: 'Пошук за назвою каналу',
+      sortByLabel: 'Сортувати за',
+      sortOrderLabel: 'Порядок',
+      ascending: 'За зростанням',
+      descending: 'За спаданням',
+      sortName: 'Назвою',
+      sortChannelId: 'ID каналу',
+      fieldName: 'Назва',
+      fieldTrip: 'Призначений рейс',
+      searchTripPlaceholder: 'Пошук рейсів за назвою або ID',
+      validationError: 'Назва каналу є обов’язковою.',
+      loadError: 'Не вдалося завантажити канали.',
+      saveError: 'Не вдалося зберегти зміни каналу.',
+      tripConflict: 'Обраний рейс не знайдено або він не належить цій компанії.',
+      createSuccess: 'Канал успішно створено.',
+      updateSuccess: 'Канал успішно оновлено.',
+      empty: 'Каналів ще немає.',
+      emptySearch: 'За вашим запитом канали не знайдено.',
+      unassigned: 'Без рейсу',
+      copyLink: 'Скопіювати посилання',
+      copyLinkSuccess: 'Публічне посилання скопійовано.',
+      copyError: 'Не вдалося автоматично скопіювати значення.',
+      publicLinkLabel: 'Публічне посилання',
+      columnName: 'Канал',
+      columnTrip: 'Рейс',
+      columnLink: 'Публічне посилання',
+      columnActions: 'Дії',
+      editAction: 'Редагувати',
+      deleteAction: 'Видалити',
+      deleteTitle: 'Видалення каналу',
+      deleteDescription: 'Видалити цей публічний канал відстеження?',
+      confirmDelete: 'Видалити канал',
+      deleting: 'Видалення...',
+      deleteError: 'Не вдалося видалити канал.',
+      deleteSuccess: 'Канал успішно видалено.',
+      statusPlanned: 'Запланований',
+      statusInProgress: 'У процесі',
+      statusCompleted: 'Завершений',
+      statusCancelled: 'Скасований',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',
