@@ -1,22 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 import type { DashboardState } from '@features/dashboard/types'
 import {
   getRoleLabel,
-  getRoleNavigation,
   getTripStatusLabel,
-  getUserAvatarLetter,
   getUserDisplayName,
 } from '@features/dashboard/presenters'
-import AppBrand from '@shared/components/AppBrand.vue'
-import AppHeaderActions from '@shared/components/AppHeaderActions.vue'
-import BaseButton from '@shared/components/BaseButton.vue'
+import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
 import type { SessionState } from '@shared/types'
-import type { NavigationItem } from '@features/dashboard/presenters'
 
 const props = defineProps<{
   session: Readonly<SessionState>
@@ -29,25 +23,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   logout: []
-  updateLocale: [locale: Locale]
   updateTheme: [theme: AppTheme]
 }>()
 
-const route = useRoute()
-const isMobileMenuOpen = ref(false)
-const hasRouteName = (item: NavigationItem): item is NavigationItem & { routeName: string } =>
-  item.routeName !== null
 const roleLabel = computed(() => getRoleLabel(props.locale, props.session.role))
 const userDisplayName = computed(() => getUserDisplayName(props.session.role, props.activeProfile))
-const navigationGroups = computed(() => getRoleNavigation(props.locale, props.session.role))
-const navigationGroupsByAvailability = computed(() =>
-  navigationGroups.value.map((group) => ({
-    ...group,
-    availableItems: group.items.filter(hasRouteName),
-    pendingItems: group.items.filter((item) => !item.routeName),
-  })),
-)
-const userAvatarLetter = computed(() => getUserAvatarLetter(userDisplayName.value))
 const workspaceTitle = computed(() =>
   props.session.role === 'owner'
     ? props.messages.dashboard.workspaceOwner
@@ -56,92 +36,19 @@ const workspaceTitle = computed(() =>
 
 const leadMetric = computed(() => props.dashboardState.stats[0] ?? null)
 const supportingMetrics = computed(() => props.dashboardState.stats.slice(1))
-
-watch(
-  () => route.fullPath,
-  () => {
-    isMobileMenuOpen.value = false
-  },
-)
 </script>
 
 <template>
-  <div class="app-shell">
-    <aside class="app-rail">
-      <div class="rail-head">
-        <AppBrand :eyebrow="messages.auth.appName" :title="roleLabel" />
-        <BaseButton
-          class="btn btn-secondary mobile-menu-toggle"
-          type="button"
-          :aria-expanded="isMobileMenuOpen"
-          aria-controls="dashboard-navigation"
-          @click="isMobileMenuOpen = !isMobileMenuOpen"
-        >
-          {{ messages.common.menu }}
-        </BaseButton>
-      </div>
-
-      <div class="rail-profile">
-        <p class="section-kicker">{{ messages.common.profile }}</p>
-        <strong>{{ userDisplayName }}</strong>
-        <span>{{ activeProfile?.company?.name || messages.common.noValue }}</span>
-      </div>
-
-      <div
-        id="dashboard-navigation"
-        class="rail-nav"
-        :class="{ 'is-mobile-open': isMobileMenuOpen }"
-      >
-        <section v-for="group in navigationGroupsByAvailability" :key="group.title" class="nav-group">
-          <p v-if="group.title" class="section-kicker">{{ group.title }}</p>
-          <div class="nav-panel">
-            <RouterLink
-              v-for="item in group.availableItems"
-              :key="item.id"
-              class="nav-link"
-              :class="{ active: route.name === item.routeName, inactive: route.name !== item.routeName }"
-              :to="{ name: item.routeName }"
-            >
-              {{ item.label }}
-            </RouterLink>
-            <BaseButton
-              v-for="item in group.pendingItems"
-              :key="item.id"
-              class="nav-link inactive"
-              disabled
-            >
-              {{ item.label }}
-            </BaseButton>
-          </div>
-        </section>
-      </div>
-
-      <div class="rail-footer">
-        <AppHeaderActions
-          :locale="locale"
-          :theme="theme"
-          @update-locale="emit('updateLocale', $event)"
-          @update-theme="emit('updateTheme', $event)"
-        />
-        <BaseButton class="btn btn-secondary sidebar-logout" @click="emit('logout')">
-          {{ messages.common.signOut }}
-        </BaseButton>
-      </div>
-    </aside>
-
-    <main class="dashboard-stage">
-      <header class="dashboard-topbar">
-        <div class="dashboard-title">
-          <p class="eyebrow">{{ roleLabel }}</p>
-          <h2>{{ workspaceTitle }}</h2>
-        </div>
-
-        <div class="dashboard-actions">
-          <div class="dashboard-chip">{{ roleLabel }}</div>
-          <div class="dashboard-avatar">{{ userAvatarLetter }}</div>
-        </div>
-      </header>
-
+  <WorkspaceShell
+    :session="session"
+    :active-profile="activeProfile"
+    :locale="locale"
+    :messages="messages"
+    :theme="theme"
+    :title="workspaceTitle"
+    @logout="emit('logout')"
+    @update-theme="emit('updateTheme', $event)"
+  >
       <div v-if="dashboardState.isLoading" class="panel">
         {{ messages.common.loading }}
       </div>
@@ -213,6 +120,5 @@ watch(
       </section>
 
       <p v-if="dashboardState.error" class="error-banner page-error">{{ dashboardState.error }}</p>
-    </main>
-  </div>
+  </WorkspaceShell>
 </template>

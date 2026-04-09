@@ -112,6 +112,21 @@ export interface TranslationDictionary {
     completed: string
     cancelled: string
   }
+  ownerSettings: {
+    pageTitle: string
+    profileTitle: string
+    companyTitle: string
+    fullName: string
+    language: string
+    companyName: string
+    saveProfile: string
+    saveCompany: string
+    saving: string
+    profileSaved: string
+    companySaved: string
+    loadError: string
+    saveError: string
+  }
   errors: {
     notFoundTitle: string
     notFoundDescription: string
@@ -229,6 +244,21 @@ export const translations: Record<Locale, TranslationDictionary> = {
       completed: 'Completed',
       cancelled: 'Cancelled',
     },
+    ownerSettings: {
+      pageTitle: 'Company settings',
+      profileTitle: 'Owner profile',
+      companyTitle: 'Company details',
+      fullName: 'Full name',
+      language: 'Language',
+      companyName: 'Company name',
+      saveProfile: 'Save profile',
+      saveCompany: 'Save company',
+      saving: 'Saving...',
+      profileSaved: 'Profile updated.',
+      companySaved: 'Company details updated.',
+      loadError: 'Owner profile could not be loaded.',
+      saveError: 'Changes could not be saved.',
+    },
     errors: {
       notFoundTitle: '404',
       notFoundDescription: 'The requested page does not exist.',
@@ -343,6 +373,21 @@ export const translations: Record<Locale, TranslationDictionary> = {
       inProgress: 'У процесі',
       completed: 'Завершені',
       cancelled: 'Скасовані',
+    },
+    ownerSettings: {
+      pageTitle: 'Налаштування компанії',
+      profileTitle: 'Профіль власника',
+      companyTitle: 'Дані компанії',
+      fullName: "Повне ім'я",
+      language: 'Інтерфейсу',
+      companyName: 'Назва компанії',
+      saveProfile: 'Зберегти профіль',
+      saveCompany: 'Зберегти компанію',
+      saving: 'Збереження...',
+      profileSaved: 'Профіль оновлено.',
+      companySaved: 'Дані компанії оновлено.',
+      loadError: 'Не вдалося завантажити профіль власника.',
+      saveError: 'Не вдалося зберегти зміни.',
     },
     errors: {
       notFoundTitle: '404',

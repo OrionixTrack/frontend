@@ -2,7 +2,7 @@ import type { ComputedRef, Ref } from 'vue'
 import type { Router } from 'vue-router'
 
 import { isApiError } from '@core/api/errors'
-import type { SessionStore } from '@core/stores/session'
+import { useSessionStore } from '@core/stores/session'
 import {
   ResendVerificationRateLimitError,
   acceptInvitationRequest,
@@ -51,7 +51,7 @@ interface CreateAuthActionsArgs {
   resendCooldownSeconds: Ref<number>
   resendTargetEmail: ComputedRef<string>
   router: Router
-  sessionStore: SessionStore
+  sessionStore: ReturnType<typeof useSessionStore>
   startResendCooldown: (seconds: number) => void
   token: ComputedRef<string>
   unverifiedOwnerEmail: Ref<string>

@@ -586,6 +586,18 @@
   grid-column: span 12;
 }
 
+.settings-grid {
+  align-items: start;
+}
+
+.settings-panel {
+  grid-column: span 6;
+}
+
+.page-error-inline {
+  margin-top: 20px;
+}
+
 .panel-header {
   display: flex;
   align-items: flex-start;
@@ -725,6 +737,7 @@
   .dashboard-hero,
   .dashboard-feature,
   .metric-card,
+  .settings-panel,
   .panel-chart,
   .panel-glance,
   .panel-trips,

@@ -9,7 +9,6 @@ const {
   messages,
   theme,
   handleLogout,
-  setLocale,
   setTheme,
 } = useDashboardView()
 </script>
@@ -23,7 +22,6 @@ const {
     :messages="messages"
     :theme="theme"
     @logout="handleLogout"
-    @update-locale="setLocale"
     @update-theme="setTheme"
   />
 </template>
