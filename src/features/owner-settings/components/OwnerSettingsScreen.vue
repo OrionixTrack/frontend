@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { watch } from 'vue'
+
 import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import BaseButton from '@shared/components/BaseButton.vue'
 import BaseInput from '@shared/components/BaseInput.vue'
 import LocaleSwitch from '@shared/components/LocaleSwitch.vue'
+import { useSnackbar } from '@shared/composables/useSnackbar'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
 import type { OwnerUser, SessionState } from '@shared/types'
 
-defineProps<{
+const props = defineProps<{
   session: Readonly<SessionState>
   activeProfile: OwnerUser | null
   locale: Locale
@@ -34,6 +37,26 @@ const emit = defineEmits<{
   submitProfile: []
   submitCompany: []
 }>()
+
+const { showSnackbar } = useSnackbar()
+
+watch(
+  () => props.profileSuccess,
+  (value) => {
+    if (value) {
+      showSnackbar(value, { tone: 'success' })
+    }
+  },
+)
+
+watch(
+  () => props.companySuccess,
+  (value) => {
+    if (value) {
+      showSnackbar(value, { tone: 'success' })
+    }
+  },
+)
 </script>
 
 <template>
@@ -74,7 +97,6 @@ const emit = defineEmits<{
             <LocaleSwitch :locale="profileLanguage" @change="emit('updateProfileLanguage', $event)" />
           </div>
 
-          <p v-if="profileSuccess" class="success-banner">{{ profileSuccess }}</p>
           <p v-if="profileError" class="error-banner">{{ profileError }}</p>
 
           <div class="auth-actions">
@@ -107,7 +129,6 @@ const emit = defineEmits<{
 
           <p class="muted-copy">{{ activeProfile?.email || messages.common.noValue }}</p>
 
-          <p v-if="companySuccess" class="success-banner">{{ companySuccess }}</p>
           <p v-if="companyError" class="error-banner">{{ companyError }}</p>
 
           <div class="auth-actions">

@@ -1,0 +1,94 @@
+<script setup lang="ts">
+import { EmployeesScreen, useEmployeesView } from '@features/employees'
+
+const {
+  activeProfile,
+  closeEditDialog,
+  closeRemoveDialog,
+  editError,
+  editForm,
+  employeeTypes,
+  hasNextPage,
+  handleEditSubmit,
+  handleLogout,
+  handleRemoveConfirm,
+  isEditDialogOpen,
+  isEditing,
+  isInitialLoading,
+  isLoading,
+  isLoadingMore,
+  isRemoveDialogOpen,
+  isRemoving,
+  items,
+  loadMoreEmployees,
+  locale,
+  messages,
+  pageError,
+  removeError,
+  saveSuccess,
+  removeSuccess,
+  selectedEmployeeType,
+  selectedEmployeeTypeLabel,
+  selectedEmployeeForRemove,
+  setEditName,
+  setEditSurname,
+  setEmployeeType,
+  setSearch,
+  setSortBy,
+  setSortOrder,
+  setTheme,
+  theme,
+  filters,
+  openEditDialog,
+  openRemoveDialog,
+  session,
+} = useEmployeesView()
+</script>
+
+<template>
+  <EmployeesScreen
+    :session="session"
+    :active-profile="activeProfile"
+    :locale="locale"
+    :messages="messages"
+    :theme="theme"
+    :employee-types="employeeTypes"
+    :selected-employee-type="selectedEmployeeType"
+    :selected-employee-type-label="selectedEmployeeTypeLabel"
+    :employees="items"
+    :search-query="filters.search"
+    :sort-by="filters.sortBy"
+    :sort-order="filters.sortOrder"
+    :page-error="pageError"
+    :save-success="saveSuccess"
+    :remove-success="removeSuccess"
+    :is-loading="isLoading"
+    :is-initial-loading="isInitialLoading"
+    :has-next-page="hasNextPage"
+    :is-loading-more="isLoadingMore"
+    :is-edit-dialog-open="isEditDialogOpen"
+    :is-editing="isEditing"
+    :edit-error="editError"
+    :edit-name="editForm.name"
+    :edit-surname="editForm.surname"
+    :is-remove-dialog-open="isRemoveDialogOpen"
+    :is-removing="isRemoving"
+    :remove-error="removeError"
+    :selected-employee-for-remove="selectedEmployeeForRemove"
+    @logout="handleLogout"
+    @update-theme="setTheme"
+    @update-employee-type="setEmployeeType"
+    @update-search-query="setSearch"
+    @update-sort-by="setSortBy"
+    @update-sort-order="setSortOrder"
+    @load-more="loadMoreEmployees"
+    @open-edit-dialog="openEditDialog"
+    @close-edit-dialog="closeEditDialog"
+    @update-edit-name="setEditName"
+    @update-edit-surname="setEditSurname"
+    @submit-edit="handleEditSubmit"
+    @open-remove-dialog="openRemoveDialog"
+    @close-remove-dialog="closeRemoveDialog"
+    @confirm-remove="handleRemoveConfirm"
+  />
+</template>

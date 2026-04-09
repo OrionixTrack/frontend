@@ -5,6 +5,7 @@ import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import BaseButton from '@shared/components/BaseButton.vue'
 import BaseDialog from '@shared/components/BaseDialog.vue'
 import BaseInput from '@shared/components/BaseInput.vue'
+import { useSnackbar } from '@shared/composables/useSnackbar'
 import type { InvitationItem } from '@features/invitations/types/InvitationItem'
 import type { InvitationRole } from '@features/invitations/types/InvitationRole'
 import type { InvitationSortOrder } from '@features/invitations/types/InvitationSortOrder'
@@ -47,9 +48,10 @@ const emit = defineEmits<{
   submitInvitation: []
 }>()
 
-const loadMoreTrigger = ref<HTMLElement | null>(null)
+const { showSnackbar } = useSnackbar()
+const loadMoreTrigger = ref(null)
 const hasTriedInviteSubmit = ref(false)
-let observer: IntersectionObserver | null = null
+let observer: { disconnect: () => void; observe: (element: unknown) => void } | null = null
 
 const disconnectObserver = (): void => {
   observer?.disconnect()
@@ -63,7 +65,7 @@ const connectObserver = (): void => {
     return
   }
 
-  observer = new IntersectionObserver(
+  observer = new window.IntersectionObserver(
     (entries) => {
       if (entries.some((entry) => entry.isIntersecting) && props.hasMoreInvitations && !props.isLoading) {
         emit('loadMore')
@@ -80,6 +82,14 @@ const connectObserver = (): void => {
 onMounted(connectObserver)
 onBeforeUnmount(disconnectObserver)
 watch([loadMoreTrigger, () => props.hasMoreInvitations, () => props.isLoading], connectObserver)
+watch(
+  () => props.createSuccess,
+  (value) => {
+    if (value) {
+      showSnackbar(value, { tone: 'success' })
+    }
+  },
+)
 
 const normalizedInvitationEmail = computed(() => props.invitationEmail.trim())
 const hasInvitationEmailError = computed(() => {
@@ -198,12 +208,11 @@ const handleCloseInviteDialog = (): void => {
             </div>
           </div>
 
-          <p v-if="createSuccess" class="success-banner">{{ createSuccess }}</p>
           <p v-if="createError" class="error-banner">{{ createError }}</p>
 
           <div class="auth-actions modal-actions">
             <BaseButton class="btn btn-secondary" :disabled="isSubmitting" @click="handleCloseInviteDialog">
-              {{ messages.common.close }}
+              {{ messages.common.cancel }}
             </BaseButton>
             <BaseButton class="btn btn-primary auth-submit" type="submit" :disabled="isSubmitting">
               {{ isSubmitting ? messages.invitations.sendingInvite : messages.invitations.sendInvite }}
@@ -225,7 +234,6 @@ const handleCloseInviteDialog = (): void => {
         </div>
 
         <p class="muted-copy">{{ messages.invitations.inviteDescription }}</p>
-        <p v-if="createSuccess" class="success-banner">{{ createSuccess }}</p>
         <p v-if="pageError" class="error-banner">{{ pageError }}</p>
 
         <div class="table-toolbar">

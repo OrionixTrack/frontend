@@ -80,6 +80,7 @@ export interface TranslationDictionary {
     language: string
     menu: string
     close: string
+    cancel: string
     signOut: string
     loading: string
     profile: string
@@ -154,6 +155,54 @@ export interface TranslationDictionary {
     acceptedAt: string
     alreadyRegistered: string
     alreadyInvited: string
+  }
+  employees: {
+    pageTitle: string
+    listTitle: string
+    description: string
+    typeLabel: string
+    driversTab: string
+    dispatchersTab: string
+    searchLabel: string
+    searchPlaceholder: string
+    sortByLabel: string
+    sortOrderLabel: string
+    newestFirst: string
+    oldestFirst: string
+    previousPage: string
+    nextPage: string
+    pageLabel: string
+    sortName: string
+    sortSurname: string
+    sortEmail: string
+    sortRegisterDate: string
+    columnName: string
+    columnSurname: string
+    columnEmail: string
+    columnLanguage: string
+    columnRegisterDate: string
+    columnActions: string
+    editAction: string
+    removeAction: string
+    editTitle: string
+    editDescription: string
+    saveChanges: string
+    saving: string
+    validationError: string
+    removeTitle: string
+    removeDriverDescription: string
+    removeDispatcherDescription: string
+    confirmRemove: string
+    removing: string
+    inviteCta: string
+    empty: string
+    emptySearch: string
+    loadError: string
+    updateError: string
+    removeError: string
+    driverRemoveConflict: string
+    updateSuccess: string
+    removeSuccess: string
   }
   ownerSettings: {
     pageTitle: string
@@ -258,6 +307,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       language: 'Language',
       menu: 'Menu',
       close: 'Close',
+      cancel: 'Cancel',
       signOut: 'Sign out',
       loading: 'Loading...',
       profile: 'Profile',
@@ -332,6 +382,55 @@ export const translations: Record<Locale, TranslationDictionary> = {
       acceptedAt: 'Accepted',
       alreadyRegistered: 'A user with this email already exists.',
       alreadyInvited: 'An invitation has already been sent to this email.',
+    },
+    employees: {
+      pageTitle: 'Employees',
+      listTitle: 'Team management',
+      description: 'Drivers and dispatchers are managed separately. New employees appear through invitations.',
+      typeLabel: 'Employee type',
+      driversTab: 'Drivers',
+      dispatchersTab: 'Dispatchers',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by name, surname, or email',
+      sortByLabel: 'Sort by',
+      sortOrderLabel: 'Order',
+      newestFirst: 'Newest first',
+      oldestFirst: 'Oldest first',
+      previousPage: 'Previous page',
+      nextPage: 'Next page',
+      pageLabel: 'Page {page}',
+      sortName: 'Name',
+      sortSurname: 'Surname',
+      sortEmail: 'Email',
+      sortRegisterDate: 'Register date',
+      columnName: 'Name',
+      columnSurname: 'Surname',
+      columnEmail: 'Email',
+      columnLanguage: 'Language',
+      columnRegisterDate: 'Register date',
+      columnActions: 'Actions',
+      editAction: 'Edit',
+      removeAction: 'Remove',
+      editTitle: 'Edit employee',
+      editDescription: 'Update the name and surname for this {type}.',
+      saveChanges: 'Save changes',
+      saving: 'Saving...',
+      validationError: 'Name and surname are required.',
+      removeTitle: 'Remove employee',
+      removeDriverDescription:
+        'Remove this driver from the company? This can be blocked when the driver still has planned or active trips.',
+      removeDispatcherDescription: 'Remove this dispatcher from the company? This action cannot be undone.',
+      confirmRemove: 'Remove employee',
+      removing: 'Removing...',
+      inviteCta: 'Go to invitations',
+      empty: 'No employees found yet. Add team members through invitations.',
+      emptySearch: 'No employees match your search.',
+      loadError: 'Employees could not be loaded.',
+      updateError: 'Employee changes could not be saved.',
+      removeError: 'Employee could not be removed.',
+      driverRemoveConflict: 'Cannot remove this driver while there are planned or active trips assigned.',
+      updateSuccess: 'Employee updated successfully.',
+      removeSuccess: 'Employee removed successfully.',
     },
     ownerSettings: {
       pageTitle: 'Company settings',
@@ -434,6 +533,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       language: 'Мова',
       menu: 'Меню',
       close: 'Закрити',
+      cancel: 'Скасувати',
       signOut: 'Вийти',
       loading: 'Завантаження...',
       profile: 'Профіль',
@@ -508,6 +608,55 @@ export const translations: Record<Locale, TranslationDictionary> = {
       acceptedAt: 'Прийнято',
       alreadyRegistered: 'Користувач з таким email уже існує.',
       alreadyInvited: 'На цей email уже відправлено інвайт.',
+    },
+    employees: {
+      pageTitle: 'Працівники',
+      listTitle: 'Керування командою',
+      description: 'Водії та диспетчери керуються окремо. Нові працівники з’являються через invitations.',
+      typeLabel: 'Тип працівника',
+      driversTab: 'Водії',
+      dispatchersTab: 'Диспетчери',
+      searchLabel: 'Пошук',
+      searchPlaceholder: 'Пошук за ім’ям, прізвищем або email',
+      sortByLabel: 'Сортувати за',
+      sortOrderLabel: 'Порядок',
+      newestFirst: 'Спочатку нові',
+      oldestFirst: 'Спочатку старі',
+      previousPage: 'Попередня сторінка',
+      nextPage: 'Наступна сторінка',
+      pageLabel: 'Сторінка {page}',
+      sortName: 'Ім’я',
+      sortSurname: 'Прізвище',
+      sortEmail: 'Email',
+      sortRegisterDate: 'Дата реєстрації',
+      columnName: 'Ім’я',
+      columnSurname: 'Прізвище',
+      columnEmail: 'Email',
+      columnLanguage: 'Мова',
+      columnRegisterDate: 'Дата реєстрації',
+      columnActions: 'Дії',
+      editAction: 'Редагувати',
+      removeAction: 'Видалити',
+      editTitle: 'Редагування працівника',
+      editDescription: 'Оновіть ім’я та прізвище для цього {type}.',
+      saveChanges: 'Зберегти зміни',
+      saving: 'Збереження...',
+      validationError: 'Ім’я та прізвище є обов’язковими.',
+      removeTitle: 'Видалення працівника',
+      removeDriverDescription:
+        'Видалити цього водія з компанії? Дію може бути заблоковано, якщо за ним ще є заплановані або активні рейси.',
+      removeDispatcherDescription: 'Видалити цього диспетчера з компанії? Цю дію не можна скасувати.',
+      confirmRemove: 'Видалити працівника',
+      removing: 'Видалення...',
+      inviteCta: 'Перейти до запрошень',
+      empty: 'Список працівників порожній. Додайте команду через invitations.',
+      emptySearch: 'За вашим запитом працівників не знайдено.',
+      loadError: 'Не вдалося завантажити працівників.',
+      updateError: 'Не вдалося зберегти зміни працівника.',
+      removeError: 'Не вдалося видалити працівника.',
+      driverRemoveConflict: 'Неможливо видалити водія, поки за ним є заплановані або активні рейси.',
+      updateSuccess: 'Працівника успішно оновлено.',
+      removeSuccess: 'Працівника успішно видалено.',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',

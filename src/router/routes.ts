@@ -105,6 +105,15 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/owner/employees',
+    name: 'owner-employees',
+    component: () => import('@/views/EmployeesView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

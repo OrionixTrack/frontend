@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { getSafeErrorMessage, isApiError } from '@core/api/errors'
 import { useSessionStore } from '@core/stores/session'
@@ -15,6 +15,7 @@ import type { OwnerUser } from '@shared/types'
 const DEFAULT_INVITATIONS_LIMIT = 30
 
 export const useInvitationsView = () => {
+  const route = useRoute()
   const router = useRouter()
   const { session, logout } = useSessionStore()
   const { theme, setTheme } = useTheme()
@@ -39,6 +40,21 @@ export const useInvitationsView = () => {
   const hasMoreInvitations = ref(true)
   const isInitialLoading = computed(() => isLoading.value && invitations.value.length === 0)
   const isLoadingMore = computed(() => isLoading.value && invitations.value.length > 0)
+  let isSyncingRouteQuery = false
+
+  const normalizeSortOrder = (value: unknown): InvitationSortOrder =>
+    value === 'ASC' ? 'ASC' : 'DESC'
+
+  const applyQueryState = (): void => {
+    isSyncingRouteQuery = true
+    filters.search = typeof route.query.search === 'string' ? route.query.search : ''
+    filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
+    filters.offset = 0
+    appliedSearch.value = filters.search.trim()
+    isSyncingRouteQuery = false
+  }
+
+  applyQueryState()
 
   const resetCreateFeedback = (): void => {
     createSuccess.value = ''
@@ -97,6 +113,38 @@ export const useInvitationsView = () => {
       }, 250)
 
       onCleanup(() => window.clearTimeout(timeoutId))
+    },
+  )
+
+  watch(
+    () => route.query,
+    () => {
+      if (isSyncingRouteQuery) {
+        return
+      }
+
+      applyQueryState()
+    },
+  )
+
+  watch(
+    () => [filters.search, filters.sortOrder] as const,
+    async ([search, sortOrder]) => {
+      if (isSyncingRouteQuery) {
+        return
+      }
+
+      isSyncingRouteQuery = true
+
+      await router.replace({
+        query: {
+          ...route.query,
+          search: search.trim() || undefined,
+          sortOrder: sortOrder === 'DESC' ? undefined : sortOrder,
+        },
+      })
+
+      isSyncingRouteQuery = false
     },
   )
 

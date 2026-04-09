@@ -109,7 +109,7 @@ export const getRoleNavigation = (
             { id: 'overview', label: t.common.overview, routeName: 'dashboard' },
             { id: 'company', label: t.dashboard.ownerCompany, routeName: 'owner-settings' },
             { id: 'invitations', label: t.invitations.pageTitle, routeName: 'owner-invitations' },
-            { id: 'employees', label: t.dashboard.ownerEmployees, routeName: null },
+            { id: 'employees', label: t.dashboard.ownerEmployees, routeName: 'owner-employees' },
             { id: 'fleet', label: t.dashboard.ownerFleet, routeName: null },
             { id: 'trackers', label: t.dashboard.ownerTrackers, routeName: null },
             { id: 'channels', label: t.dashboard.ownerChannels, routeName: null },
