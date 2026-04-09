@@ -49,9 +49,9 @@ const emit = defineEmits<{
 }>()
 
 const { showSnackbar } = useSnackbar()
-const loadMoreTrigger = ref(null)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
 const hasTriedInviteSubmit = ref(false)
-let observer: { disconnect: () => void; observe: (element: unknown) => void } | null = null
+let observer: IntersectionObserver | null = null
 
 const disconnectObserver = (): void => {
   observer?.disconnect()
@@ -76,7 +76,7 @@ const connectObserver = (): void => {
     },
   )
 
-  observer.observe(loadMoreTrigger.value)
+  observer?.observe(loadMoreTrigger.value)
 }
 
 onMounted(connectObserver)

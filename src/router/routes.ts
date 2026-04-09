@@ -114,6 +114,24 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/owner/vehicles',
+    name: 'owner-vehicles',
+    component: () => import('@/views/VehiclesView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
+    path: '/owner/trackers',
+    name: 'owner-trackers',
+    component: () => import('@/views/TrackersView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

@@ -67,8 +67,8 @@ const emit = defineEmits<{
 
 const { showSnackbar } = useSnackbar()
 const hasTriedEditSubmit = ref(false)
-const loadMoreTrigger = ref(null)
-let observer: { disconnect: () => void; observe: (element: unknown) => void } | null = null
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 const normalizedEditName = computed(() => props.editName.trim())
 const normalizedEditSurname = computed(() => props.editSurname.trim())
 const hasEditValidationError = computed(
@@ -156,7 +156,7 @@ const connectObserver = (): void => {
     },
   )
 
-  observer.observe(loadMoreTrigger.value)
+  observer?.observe(loadMoreTrigger.value)
 }
 
 const handleSortByChange = (event: Event): void => {
@@ -363,7 +363,7 @@ watch(
           </RouterLink>
         </div>
 
-        <p class="muted-copy">
+        <p class="muted-copy page-description">
           {{ messages.employees.description }}
         </p>
         <p

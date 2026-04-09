@@ -120,11 +120,9 @@ export const useAuthView = () => {
   const hasAcceptInvitationErrorState = computed(
     () =>
       mode.value === 'accept-invitation' &&
-      [
-        AUTH_ERROR_CODES.acceptInvitationExpired,
-        AUTH_ERROR_CODES.acceptInvitationInvalid,
-        AUTH_ERROR_CODES.acceptInvitationUsed,
-      ].includes(authError.value as (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES]),
+      (authError.value === AUTH_ERROR_CODES.acceptInvitationExpired ||
+        authError.value === AUTH_ERROR_CODES.acceptInvitationInvalid ||
+        authError.value === AUTH_ERROR_CODES.acceptInvitationUsed),
   )
   const helperLinks = computed(() =>
     createHelperLinks({

@@ -1,0 +1,87 @@
+<script setup lang="ts">
+import { VehiclesScreen, useVehiclesView } from '@features/vehicles'
+
+const {
+  activeProfile,
+  actionSuccess,
+  closeDeleteDialog,
+  closeVehicleDialog,
+  confirmDelete,
+  deleteError,
+  filters,
+  handleLogout,
+  hasNextPage,
+  isDeleteDialogOpen,
+  isDeletingVehicle,
+  isEditingVehicle,
+  isInitialLoading,
+  isLoading,
+  isLoadingMore,
+  isSavingVehicle,
+  isVehicleDialogOpen,
+  items,
+  loadMoreVehicles,
+  locale,
+  messages,
+  openCreateDialog,
+  openDeleteDialog,
+  openEditDialog,
+  pageError,
+  selectedVehicleForDelete,
+  session,
+  setSearch,
+  setVehicleFormField,
+  setSortBy,
+  setSortOrder,
+  setTheme,
+  submitVehicle,
+  theme,
+  trackers,
+  vehicleError,
+  vehicleForm,
+} = useVehiclesView()
+</script>
+
+<template>
+  <VehiclesScreen
+    :session="session"
+    :active-profile="activeProfile"
+    :locale="locale"
+    :messages="messages"
+    :theme="theme"
+    :vehicles="items"
+    :trackers="trackers"
+    :search-query="filters.search"
+    :sort-by="filters.sortBy"
+    :sort-order="filters.sortOrder"
+    :page-error="pageError"
+    :action-success="actionSuccess"
+    :is-loading="isLoading"
+    :is-initial-loading="isInitialLoading"
+    :has-next-page="hasNextPage"
+    :is-loading-more="isLoadingMore"
+    :is-vehicle-dialog-open="isVehicleDialogOpen"
+    :is-editing-vehicle="isEditingVehicle"
+    :is-saving-vehicle="isSavingVehicle"
+    :vehicle-error="vehicleError"
+    :vehicle-form="vehicleForm"
+    :is-delete-dialog-open="isDeleteDialogOpen"
+    :is-deleting-vehicle="isDeletingVehicle"
+    :delete-error="deleteError"
+    :selected-vehicle-for-delete="selectedVehicleForDelete"
+    @logout="handleLogout"
+    @update-theme="setTheme"
+    @open-create-dialog="openCreateDialog"
+    @open-edit-dialog="openEditDialog"
+    @close-vehicle-dialog="closeVehicleDialog"
+    @update-search-query="setSearch"
+    @update-sort-by="setSortBy"
+    @update-sort-order="setSortOrder"
+    @update-vehicle-form="setVehicleFormField"
+    @submit-vehicle="submitVehicle"
+    @open-delete-dialog="openDeleteDialog"
+    @close-delete-dialog="closeDeleteDialog"
+    @confirm-delete="confirmDelete"
+    @load-more="loadMoreVehicles"
+  />
+</template>

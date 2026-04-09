@@ -204,6 +204,140 @@ export interface TranslationDictionary {
     updateSuccess: string
     removeSuccess: string
   }
+  vehicles: {
+    pageTitle: string
+    listTitle: string
+    description: string
+    createAction: string
+    createTitle: string
+    createDescription: string
+    editTitle: string
+    editDescription: string
+    saveChanges: string
+    saving: string
+    searchLabel: string
+    searchPlaceholder: string
+    sortByLabel: string
+    sortOrderLabel: string
+    ascending: string
+    descending: string
+    sortName: string
+    sortLicensePlate: string
+    sortBrand: string
+    sortProductionYear: string
+    fieldName: string
+    fieldLicensePlate: string
+    fieldBrand: string
+    fieldModel: string
+    fieldProductionYear: string
+    fieldCapacity: string
+    fieldIsActive: string
+    validationError: string
+    duplicateLicensePlate: string
+    saveError: string
+    loadError: string
+    createSuccess: string
+    updateSuccess: string
+    activatedSuccess: string
+    deactivatedSuccess: string
+    empty: string
+    emptySearch: string
+    columnVehicle: string
+    columnSpecs: string
+    columnCapacity: string
+    columnTracker: string
+    columnStatus: string
+    columnActions: string
+    statusActive: string
+    statusInactive: string
+    noTracker: string
+    editAction: string
+    activateAction: string
+    deactivateAction: string
+    trackerAction: string
+    deleteAction: string
+    deleteTitle: string
+    deleteDescription: string
+    confirmDelete: string
+    deleting: string
+    deleteError: string
+    deleteConflict: string
+    deleteSuccess: string
+    trackerTitle: string
+    trackerManageTitle: string
+    trackerManageDescription: string
+    trackerField: string
+    trackerNone: string
+    trackerCurrent: string
+    saveTracker: string
+    trackerSaved: string
+    trackerSaveError: string
+    regenerateTrackerToken: string
+    trackerTokenLabel: string
+    trackerTokenError: string
+    trackerTokenUnavailable: string
+    summaryVehicles: string
+    summaryVehiclesHint: string
+    summaryTrackers: string
+    summaryTrackersHint: string
+  }
+  trackers: {
+    pageTitle: string
+    listTitle: string
+    description: string
+    createAction: string
+    createTitle: string
+    createDescription: string
+    editTitle: string
+    editDescription: string
+    saveChanges: string
+    saving: string
+    searchLabel: string
+    searchPlaceholder: string
+    sortByLabel: string
+    sortOrderLabel: string
+    ascending: string
+    descending: string
+    sortName: string
+    sortTrackerId: string
+    fieldName: string
+    fieldVehicle: string
+    searchVehiclePlaceholder: string
+    validationError: string
+    loadError: string
+    saveError: string
+    vehicleConflict: string
+    createSuccess: string
+    updateSuccess: string
+    empty: string
+    emptySearch: string
+    unassigned: string
+    columnId: string
+    columnName: string
+    columnVehicle: string
+    columnActions: string
+    editAction: string
+    regenerateAction: string
+    deleteAction: string
+    tokenLabel: string
+    copyToken: string
+    copySuccess: string
+    copyError: string
+    tokenError: string
+    tokenSuccess: string
+    tokenDialogTitle: string
+    tokenDialogDescription: string
+    regenerateConfirmTitle: string
+    regenerateConfirmDescription: string
+    confirmRegenerate: string
+    deleteTitle: string
+    deleteDescription: string
+    confirmDelete: string
+    deleting: string
+    deleteError: string
+    deleteConflict: string
+    deleteSuccess: string
+  }
   ownerSettings: {
     pageTitle: string
     profileTitle: string
@@ -432,6 +566,142 @@ export const translations: Record<Locale, TranslationDictionary> = {
       updateSuccess: 'Employee updated successfully.',
       removeSuccess: 'Employee removed successfully.',
     },
+    vehicles: {
+      pageTitle: 'Vehicles',
+      listTitle: 'Fleet directory',
+      description:
+        'Manage company vehicles, toggle their availability, and connect a tracker to each unit when it is ready for trips.',
+      createAction: 'Add vehicle',
+      createTitle: 'Create vehicle',
+      createDescription: 'Save a new transport unit in the fleet directory.',
+      editTitle: 'Edit vehicle',
+      editDescription: 'Update the transport record and availability settings.',
+      saveChanges: 'Save changes',
+      saving: 'Saving...',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by name, plate, or brand',
+      sortByLabel: 'Sort by',
+      sortOrderLabel: 'Order',
+      ascending: 'Ascending',
+      descending: 'Descending',
+      sortName: 'Name',
+      sortLicensePlate: 'License plate',
+      sortBrand: 'Brand',
+      sortProductionYear: 'Production year',
+      fieldName: 'Name',
+      fieldLicensePlate: 'License plate',
+      fieldBrand: 'Brand',
+      fieldModel: 'Model',
+      fieldProductionYear: 'Production year',
+      fieldCapacity: 'Capacity',
+      fieldIsActive: 'Vehicle is active and can be assigned to trips',
+      validationError: 'Name and license plate are required.',
+      duplicateLicensePlate: 'A vehicle with this license plate already exists.',
+      saveError: 'Vehicle changes could not be saved.',
+      loadError: 'Vehicles could not be loaded.',
+      createSuccess: 'Vehicle created successfully.',
+      updateSuccess: 'Vehicle updated successfully.',
+      activatedSuccess: 'Vehicle activated successfully.',
+      deactivatedSuccess: 'Vehicle deactivated successfully.',
+      empty: 'No vehicles added yet.',
+      emptySearch: 'No vehicles match your search.',
+      columnVehicle: 'Vehicle',
+      columnSpecs: 'Specs',
+      columnCapacity: 'Capacity',
+      columnTracker: 'Tracker',
+      columnStatus: 'Status',
+      columnActions: 'Actions',
+      statusActive: 'Active',
+      statusInactive: 'Inactive',
+      noTracker: 'No tracker',
+      editAction: 'Edit',
+      activateAction: 'Activate',
+      deactivateAction: 'Deactivate',
+      trackerAction: 'Tracker',
+      deleteAction: 'Delete',
+      deleteTitle: 'Delete vehicle',
+      deleteDescription: 'Delete this vehicle from the directory? This is blocked when there are planned or active trips.',
+      confirmDelete: 'Delete vehicle',
+      deleting: 'Deleting...',
+      deleteError: 'Vehicle could not be deleted.',
+      deleteConflict: 'Cannot delete this vehicle while it still has planned or active trips.',
+      deleteSuccess: 'Vehicle deleted successfully.',
+      trackerTitle: 'Tracker',
+      trackerManageTitle: 'Manage tracker binding',
+      trackerManageDescription:
+        'Attach one tracker to the vehicle or remove the current binding. A tracker can belong to only one vehicle.',
+      trackerField: 'Assigned tracker',
+      trackerNone: 'No tracker',
+      trackerCurrent: 'Current tracker',
+      saveTracker: 'Save tracker',
+      trackerSaved: 'Tracker binding updated successfully.',
+      trackerSaveError: 'Tracker binding could not be updated.',
+      regenerateTrackerToken: 'Regenerate token',
+      trackerTokenLabel: 'New tracker token',
+      trackerTokenError: 'Tracker token could not be regenerated.',
+      trackerTokenUnavailable: 'The server did not return a tracker token in the response.',
+      summaryVehicles: 'Visible vehicles',
+      summaryVehiclesHint: 'The current page reflects your active search, sort, and pagination filters.',
+      summaryTrackers: 'Available trackers',
+      summaryTrackersHint: 'Only one tracker can be linked to one vehicle at a time.',
+    },
+    trackers: {
+      pageTitle: 'Trackers',
+      listTitle: 'Tracker registry',
+      description: 'Create tracker records, bind them to vehicles, regenerate tokens, and keep device access under control.',
+      createAction: 'Add tracker',
+      createTitle: 'Create tracker',
+      createDescription: 'Save a new tracker and show its secret token immediately after creation.',
+      editTitle: 'Edit tracker',
+      editDescription: 'Rename the tracker or change the assigned vehicle.',
+      saveChanges: 'Save changes',
+      saving: 'Saving...',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by tracker name',
+      sortByLabel: 'Sort by',
+      sortOrderLabel: 'Order',
+      ascending: 'Ascending',
+      descending: 'Descending',
+      sortName: 'Name',
+      sortTrackerId: 'Tracker ID',
+      fieldName: 'Name',
+      fieldVehicle: 'Assigned vehicle',
+      searchVehiclePlaceholder: 'Search vehicles by name or plate',
+      validationError: 'Tracker name is required.',
+      loadError: 'Trackers could not be loaded.',
+      saveError: 'Tracker changes could not be saved.',
+      vehicleConflict: 'This vehicle already has a tracker assigned.',
+      createSuccess: 'Tracker created successfully.',
+      updateSuccess: 'Tracker updated successfully.',
+      empty: 'No trackers added yet.',
+      emptySearch: 'No trackers match your search.',
+      unassigned: 'Unassigned',
+      columnId: 'ID',
+      columnName: 'Tracker',
+      columnVehicle: 'Vehicle',
+      columnActions: 'Actions',
+      editAction: 'Edit',
+      regenerateAction: 'Regenerate token',
+      deleteAction: 'Delete',
+      tokenLabel: 'Device secret token',
+      copyToken: 'Copy token',
+      copySuccess: 'Tracker token copied.',
+      copyError: 'Tracker token could not be copied automatically.',
+      tokenError: 'Tracker token could not be regenerated.',
+      tokenSuccess: 'Tracker token regenerated successfully.',
+      tokenDialogTitle: 'Tracker token',
+      tokenDialogDescription: 'This secret token is shown only once. Copy it now and store it securely.',
+      regenerateConfirmTitle: 'Regenerate tracker token',
+      regenerateConfirmDescription: 'Generate a new secret token for this tracker? The previous token will stop working.',
+      confirmRegenerate: 'Regenerate token',
+      deleteTitle: 'Delete tracker',
+      deleteDescription: 'Delete this tracker from the registry?',
+      confirmDelete: 'Delete tracker',
+      deleting: 'Deleting...',
+      deleteError: 'Tracker could not be deleted.',
+      deleteConflict: 'Tracker cannot be deleted right now.',
+      deleteSuccess: 'Tracker deleted successfully.',
+    },
     ownerSettings: {
       pageTitle: 'Company settings',
       profileTitle: 'Owner profile',
@@ -657,6 +927,143 @@ export const translations: Record<Locale, TranslationDictionary> = {
       driverRemoveConflict: 'Неможливо видалити водія, поки за ним є заплановані або активні рейси.',
       updateSuccess: 'Працівника успішно оновлено.',
       removeSuccess: 'Працівника успішно видалено.',
+    },
+    vehicles: {
+      pageTitle: 'Транспорт',
+      listTitle: 'Довідник рухомого складу',
+      description:
+        'Керуйте транспортом компанії, вмикайте або вимикайте доступність і прив’язуйте GPS-трекер до кожного ТЗ, коли він готовий до рейсів.',
+      createAction: 'Додати транспорт',
+      createTitle: 'Створення ТЗ',
+      createDescription: 'Збережіть новий транспортний засіб у довіднику компанії.',
+      editTitle: 'Редагування ТЗ',
+      editDescription: 'Оновіть дані транспортного засобу та його доступність.',
+      saveChanges: 'Зберегти зміни',
+      saving: 'Збереження...',
+      searchLabel: 'Пошук',
+      searchPlaceholder: 'Пошук за назвою, номером або брендом',
+      sortByLabel: 'Сортувати за',
+      sortOrderLabel: 'Порядок',
+      ascending: 'За зростанням',
+      descending: 'За спаданням',
+      sortName: 'Назвою',
+      sortLicensePlate: 'Номером',
+      sortBrand: 'Брендом',
+      sortProductionYear: 'Роком випуску',
+      fieldName: 'Назва',
+      fieldLicensePlate: 'Номер',
+      fieldBrand: 'Бренд',
+      fieldModel: 'Модель',
+      fieldProductionYear: 'Рік випуску',
+      fieldCapacity: 'Місткість',
+      fieldIsActive: 'Транспорт активний і може бути призначений на рейси',
+      validationError: 'Назва та номер є обов’язковими.',
+      duplicateLicensePlate: 'Транспорт із таким номером уже існує.',
+      saveError: 'Не вдалося зберегти зміни транспорту.',
+      loadError: 'Не вдалося завантажити транспорт.',
+      createSuccess: 'Транспорт успішно створено.',
+      updateSuccess: 'Транспорт успішно оновлено.',
+      activatedSuccess: 'Транспорт успішно активовано.',
+      deactivatedSuccess: 'Транспорт успішно деактивовано.',
+      empty: 'Транспортних засобів ще немає.',
+      emptySearch: 'За вашим запитом транспорт не знайдено.',
+      columnVehicle: 'Транспорт',
+      columnSpecs: 'Характеристики',
+      columnCapacity: 'Місткість',
+      columnTracker: 'Трекер',
+      columnStatus: 'Статус',
+      columnActions: 'Дії',
+      statusActive: 'Активний',
+      statusInactive: 'Неактивний',
+      noTracker: 'Без трекера',
+      editAction: 'Редагувати',
+      activateAction: 'Активувати',
+      deactivateAction: 'Деактивувати',
+      trackerAction: 'Трекер',
+      deleteAction: 'Видалити',
+      deleteTitle: 'Видалення транспорту',
+      deleteDescription:
+        'Видалити цей транспорт із довідника? Дію буде заблоковано, якщо за ним є planned або in_progress рейси.',
+      confirmDelete: 'Видалити транспорт',
+      deleting: 'Видалення...',
+      deleteError: 'Не вдалося видалити транспорт.',
+      deleteConflict: 'Неможливо видалити транспорт, поки за ним є planned або in_progress рейси.',
+      deleteSuccess: 'Транспорт успішно видалено.',
+      trackerTitle: 'Трекер',
+      trackerManageTitle: 'Керування прив’язкою трекера',
+      trackerManageDescription:
+        'Прив’яжіть один трекер до транспортного засобу або зніміть поточну прив’язку. Один трекер може належати лише одному ТЗ.',
+      trackerField: 'Призначений трекер',
+      trackerNone: 'Без трекера',
+      trackerCurrent: 'Поточний трекер',
+      saveTracker: 'Зберегти трекер',
+      trackerSaved: 'Прив’язку трекера успішно оновлено.',
+      trackerSaveError: 'Не вдалося оновити прив’язку трекера.',
+      regenerateTrackerToken: 'Регенерувати токен',
+      trackerTokenLabel: 'Новий токен трекера',
+      trackerTokenError: 'Не вдалося регенерувати токен трекера.',
+      trackerTokenUnavailable: 'Сервер не повернув токен трекера у відповіді.',
+      summaryVehicles: 'Транспорт на сторінці',
+      summaryVehiclesHint: 'Кількість залежить від поточного пошуку, сортування та пагінації.',
+      summaryTrackers: 'Доступні трекери',
+      summaryTrackersHint: 'Один трекер може бути прив’язаний лише до одного транспорту.',
+    },
+    trackers: {
+      pageTitle: 'Трекери',
+      listTitle: 'Реєстр трекерів',
+      description: 'Створюйте трекери, прив’язуйте їх до транспорту, регенеруйте токени й керуйте доступом пристроїв.',
+      createAction: 'Додати трекер',
+      createTitle: 'Створення трекера',
+      createDescription: 'Збережіть новий трекер і одразу покажіть секретний токен користувачу.',
+      editTitle: 'Редагування трекера',
+      editDescription: 'Оновіть назву трекера або змініть прив’язаний транспорт.',
+      saveChanges: 'Зберегти зміни',
+      saving: 'Збереження...',
+      searchLabel: 'Пошук',
+      searchPlaceholder: 'Пошук за назвою трекера',
+      sortByLabel: 'Сортувати за',
+      sortOrderLabel: 'Порядок',
+      ascending: 'За зростанням',
+      descending: 'За спаданням',
+      sortName: 'Назвою',
+      sortTrackerId: 'ID трекера',
+      fieldName: 'Назва',
+      fieldVehicle: 'Призначений транспорт',
+      searchVehiclePlaceholder: 'Пошук транспорту за назвою або номером',
+      validationError: 'Назва трекера є обов’язковою.',
+      loadError: 'Не вдалося завантажити трекери.',
+      saveError: 'Не вдалося зберегти зміни трекера.',
+      vehicleConflict: 'До цього транспорту вже прив’язано інший трекер.',
+      createSuccess: 'Трекер успішно створено.',
+      updateSuccess: 'Трекер успішно оновлено.',
+      empty: 'Трекерів ще немає.',
+      emptySearch: 'За вашим запитом трекери не знайдено.',
+      unassigned: 'Не прив’язано',
+      columnId: 'ID',
+      columnName: 'Трекер',
+      columnVehicle: 'Транспорт',
+      columnActions: 'Дії',
+      editAction: 'Редагувати',
+      regenerateAction: 'Регенерувати токен',
+      deleteAction: 'Видалити',
+      tokenLabel: 'Секретний токен пристрою',
+      copyToken: 'Скопіювати токен',
+      copySuccess: 'Токен трекера скопійовано.',
+      copyError: 'Не вдалося автоматично скопіювати токен.',
+      tokenError: 'Не вдалося регенерувати токен трекера.',
+      tokenSuccess: 'Токен трекера успішно регенеровано.',
+      tokenDialogTitle: 'Токен трекера',
+      tokenDialogDescription: 'Цей секретний токен показується лише один раз. Скопіюйте його зараз і збережіть у безпечному місці.',
+      regenerateConfirmTitle: 'Регенерація токена трекера',
+      regenerateConfirmDescription: 'Згенерувати новий секретний токен для цього трекера? Попередній токен перестане працювати.',
+      confirmRegenerate: 'Регенерувати токен',
+      deleteTitle: 'Видалення трекера',
+      deleteDescription: 'Видалити цей трекер із реєстру?',
+      confirmDelete: 'Видалити трекер',
+      deleting: 'Видалення...',
+      deleteError: 'Не вдалося видалити трекер.',
+      deleteConflict: 'Наразі трекер не можна видалити.',
+      deleteSuccess: 'Трекер успішно видалено.',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',
