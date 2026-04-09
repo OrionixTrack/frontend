@@ -228,6 +228,21 @@
   display: grid;
 }
 
+.auth-inline-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+}
+
+.auth-inline-note strong {
+  font-family: var(--font-display), sans-serif;
+}
+
 .locale-switch {
   display: flex;
   align-items: center;
@@ -325,6 +340,35 @@
   background: rgba(255, 107, 107, 0.08);
   color: var(--danger);
   font-weight: 700;
+}
+
+.success-banner {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(125, 211, 165, 0.24);
+  border-radius: var(--radius-md);
+  background: rgba(125, 211, 165, 0.08);
+  color: var(--success);
+  font-weight: 700;
+}
+
+.info-banner {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(147, 197, 253, 0.24);
+  border-radius: var(--radius-md);
+  background: rgba(147, 197, 253, 0.08);
+  color: var(--info);
+  font-weight: 700;
+}
+
+.auth-links {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-link {
+  width: 100%;
 }
 
 .app-shell {

@@ -1,135 +1,229 @@
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useSessionStore } from '@core/stores/session'
-import { loginRequest } from '@features/auth/api/auth.api'
-import type { AuthScreenUi, DispatcherAuthResponse, LoginCredentials, OwnerAuthResponse } from '@features/auth/types'
-import type { RoleOption } from '@features/auth/types/RoleOption'
+import { AUTH_ERROR_CODES, createAuthActions } from '@features/auth/composables/auth.actions'
+import { getStringQuery } from '@features/auth/composables/auth.helpers'
+import {
+  AUTH_ROUTE_TO_MODE,
+  createAuthUi,
+  createHelperLinks,
+  createResendCooldownMessage,
+  createRoleOptions,
+  getAuthHeading,
+} from '@features/auth/composables/auth.presentation'
+import { useResendCooldown } from '@features/auth/composables/useResendCooldown'
+import type { AuthFormState, AuthMode } from '@features/auth/types'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
+import type { Locale } from '@shared/i18n/translations'
 import type { UserRole } from '@shared/types'
 
-const isOwnerAuthResponse = (
-  payload: OwnerAuthResponse | DispatcherAuthResponse,
-): payload is OwnerAuthResponse => 'owner' in payload
-
-const normalizeAuthPayload = (
-  role: UserRole,
-  payload: OwnerAuthResponse | DispatcherAuthResponse,
-): {
-  accessToken: string
-  role: UserRole
-  user: OwnerAuthResponse['owner'] | DispatcherAuthResponse['dispatcher']
-} => {
-  if (role === 'owner' && isOwnerAuthResponse(payload)) {
-    const ownerPayload = payload
-
-    return {
-      accessToken: ownerPayload.access_token,
-      role,
-      user: ownerPayload.owner,
-    }
-  }
-
-  if (role === 'dispatcher' && !isOwnerAuthResponse(payload)) {
-    const dispatcherPayload = payload
-
-    return {
-      accessToken: dispatcherPayload.access_token,
-      role,
-      user: dispatcherPayload.dispatcher,
-    }
-  }
-
-  throw new Error('Unexpected authentication response.')
-}
-
 export const useAuthView = () => {
+  const route = useRoute()
   const router = useRouter()
-  const { setSession } = useSessionStore()
+  const sessionStore = useSessionStore()
   const { theme, setTheme } = useTheme()
   const { locale, messages, setLocale } = useI18n()
-  const { isLoading: isSubmitting, error: authError, execute } = useApiState('')
-  const credentials = ref<LoginCredentials>({
-    role: 'owner' as UserRole,
+  const { isLoading: isSubmitting, error: authError, execute, resetError } = useApiState('')
+  const { resendCooldownSeconds, startResendCooldown } = useResendCooldown()
+  const authSuccess = ref('')
+  const authInfo = ref('')
+  const lastAutoVerificationToken = ref('')
+  const unverifiedOwnerEmail = ref('')
+  const form = ref<AuthFormState>({
+    role: 'owner',
     email: '',
     password: '',
+    fullName: '',
+    companyName: '',
+    name: '',
+    surname: '',
+    newPassword: '',
+    language: locale.value,
   })
 
-  const roleOptions = computed<RoleOption[]>(() => [
-    {
-      value: 'owner',
-      label: messages.value.auth.roleOwner,
-      description: messages.value.auth.ownerDescription,
-    },
-    {
-      value: 'dispatcher',
-      label: messages.value.auth.roleDispatcher,
-      description: messages.value.auth.dispatcherDescription,
-    },
-  ])
+  const mode = computed<AuthMode>(() => AUTH_ROUTE_TO_MODE[String(route.name)] || 'login')
+  const token = computed(() => getStringQuery(route.query.token).trim())
+  const hasToken = computed(() => token.value.length > 0)
+  const redirectTarget = computed(() => getStringQuery(route.query.redirect))
+  const resendTargetEmail = computed(() => unverifiedOwnerEmail.value || form.value.email.trim())
 
-  const authHeading = computed(() =>
-    credentials.value.role === 'owner'
-      ? messages.value.auth.signInOwner
-      : messages.value.auth.signInDispatcher,
+  const syncFormWithRoute = (): void => {
+    const role = getStringQuery(route.query.role)
+    const email = getStringQuery(route.query.email)
+    const routeLocale = getStringQuery(route.query.language)
+
+    if (role === 'owner' || role === 'dispatcher') {
+      form.value.role = role
+    }
+
+    form.value.email = email || form.value.email
+
+    if (email) {
+      unverifiedOwnerEmail.value = email
+    } else if (mode.value !== 'login') {
+      unverifiedOwnerEmail.value = ''
+    }
+
+    if (routeLocale === 'uk' || routeLocale === 'en') {
+      setLocale(routeLocale)
+    }
+
+    form.value.language = locale.value
+    authSuccess.value = ''
+    authInfo.value = ''
+    resetError()
+  }
+
+  watch(
+    () => route.fullPath,
+    syncFormWithRoute,
+    { immediate: true },
   )
 
-  const authUi = computed<AuthScreenUi>(() => ({
-    appName: messages.value.auth.appName,
-    loginTitle: messages.value.auth.loginTitle,
-    heroTitle: messages.value.auth.heroTitle,
-    heroDescription: messages.value.auth.heroDescription,
-    email: messages.value.auth.email,
-    password: messages.value.auth.password,
-    signIn: messages.value.auth.signIn,
-    signingIn: messages.value.auth.signingIn,
-  }))
+  watch(locale, (value) => {
+    form.value.language = value
+  })
 
-  const handleLogin = async (): Promise<void> => {
-    const controller = new AbortController()
-
-    try {
-      const payload = await execute(
-        () => loginRequest(credentials.value, controller.signal),
-        (error) => (error instanceof Error ? error.message : messages.value.auth.signInError),
-      )
-
-      setSession(normalizeAuthPayload(credentials.value.role, payload))
-      setPassword('')
-      await router.replace({ name: 'dashboard' })
-    } catch {
-      return
+  const roleOptions = computed(() => createRoleOptions(messages.value))
+  const authHeading = computed(() => getAuthHeading(messages.value, mode.value, form.value.role))
+  const authUi = computed(() => createAuthUi(messages.value, mode.value, authHeading.value))
+  const localizedAuthError = computed(() => {
+    switch (authError.value) {
+      case AUTH_ERROR_CODES.emailNotVerified:
+        return messages.value.auth.emailNotVerified
+      case AUTH_ERROR_CODES.signInError:
+        return messages.value.auth.signInError
+      case AUTH_ERROR_CODES.resendTooSoon:
+        return messages.value.auth.resendTooSoon
+      case AUTH_ERROR_CODES.verifyEmailError:
+        return messages.value.auth.verifyEmailError
+      case AUTH_ERROR_CODES.verifyEmailInvalid:
+        return messages.value.auth.verifyEmailInvalid
+      default:
+        return authError.value
     }
+  })
+  const resendCooldownMessage = computed(() =>
+    createResendCooldownMessage(messages.value, resendCooldownSeconds.value),
+  )
+  const helperLinks = computed(() =>
+    createHelperLinks({
+      authError: localizedAuthError.value,
+      messages: messages.value,
+      mode: mode.value,
+      resendTargetEmail: resendTargetEmail.value,
+      role: form.value.role,
+      unverifiedOwnerEmail: unverifiedOwnerEmail.value,
+    }),
+  )
+
+  const { handleSubmit } = createAuthActions({
+    authSuccess,
+    authInfo,
+    authUi,
+    execute,
+    form,
+    hasToken,
+    messages,
+    mode,
+    redirectTarget,
+    resendCooldownSeconds,
+    resendTargetEmail,
+    router,
+    sessionStore,
+    startResendCooldown,
+    token,
+    unverifiedOwnerEmail,
+  })
+
+  watch(
+    [mode, token],
+    async ([currentMode, currentToken]) => {
+      if (
+        currentMode === 'verify-email' &&
+        currentToken &&
+        currentToken !== lastAutoVerificationToken.value
+      ) {
+        lastAutoVerificationToken.value = currentToken
+        await handleSubmit()
+      }
+    },
+    { immediate: true },
+  )
+
+  const setLocaleAndLanguage = (value: Locale): void => {
+    setLocale(value)
+    form.value.language = value
   }
 
-  const setEmail = (email: string): void => {
-    credentials.value.email = email
-  }
+  const showPrimaryAction = computed(() => mode.value === 'check-email' || mode.value === 'verify-email')
+  const isSubmitDisabled = computed(() => {
+    if (mode.value === 'resend-verification') {
+      return isSubmitting.value || resendCooldownSeconds.value > 0
+    }
 
-  const setPassword = (password: string): void => {
-    credentials.value.password = password
-  }
+    return isSubmitting.value
+  })
 
-  const setRole = (role: UserRole): void => {
-    credentials.value.role = role
-  }
+  const isPrimaryActionDisabled = computed(() => {
+    if (mode.value === 'check-email') {
+      return isSubmitting.value || resendCooldownSeconds.value > 0 || !resendTargetEmail.value
+    }
+
+    if (mode.value === 'verify-email') {
+      return true
+    }
+
+    return isSubmitting.value
+  })
 
   return {
-    authError,
-    isSubmitting,
-    credentials,
-    roleOptions,
+    authError: localizedAuthError,
+    authInfo,
+    authSuccess,
     authHeading,
     authUi,
+    form,
+    hasToken,
+    helperLinks,
+    isPrimaryActionDisabled,
+    isSubmitDisabled,
+    isSubmitting,
     locale,
+    mode,
+    resendCooldownMessage,
+    roleOptions,
+    showPrimaryAction,
     theme,
-    setRole,
-    setLocale,
+    handleSubmit,
+    setRole: (role: UserRole) => {
+      form.value.role = role
+    },
+    setLocale: setLocaleAndLanguage,
     setTheme,
-    setEmail,
-    setPassword,
-    handleLogin,
+    setEmail: (email: string) => {
+      form.value.email = email
+    },
+    setPassword: (password: string) => {
+      form.value.password = password
+    },
+    setFullName: (fullName: string) => {
+      form.value.fullName = fullName
+    },
+    setCompanyName: (companyName: string) => {
+      form.value.companyName = companyName
+    },
+    setName: (name: string) => {
+      form.value.name = name
+    },
+    setSurname: (surname: string) => {
+      form.value.surname = surname
+    },
+    setNewPassword: (newPassword: string) => {
+      form.value.newPassword = newPassword
+    },
   }
 }

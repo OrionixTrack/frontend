@@ -7,7 +7,12 @@ export const applyRouteGuards = (to: RouteLocationNormalized) => {
   const { isAuthenticated, session } = useSessionStore()
 
   if (to.meta.requiresAuth && !isAuthenticated.value) {
-    return { name: 'login' }
+    return {
+      name: 'login',
+      query: {
+        redirect: to.fullPath,
+      },
+    }
   }
 
   if (to.meta.guestOnly && isAuthenticated.value) {

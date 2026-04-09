@@ -141,7 +141,17 @@ const requestJson = async <TResponse>(
       return null as TResponse
     }
 
-    return (await response.json()) as TResponse
+    const text = await response.text()
+
+    if (!text) {
+      return null as TResponse
+    }
+
+    try {
+      return JSON.parse(text) as TResponse
+    } catch {
+      return text as TResponse
+    }
   } finally {
     cleanup()
   }

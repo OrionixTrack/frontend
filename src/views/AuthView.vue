@@ -3,9 +3,18 @@ import { AuthScreen, useAuthView } from '@features/auth'
 
 const {
   authError,
+  authInfo,
+  authSuccess,
   isSubmitting,
-  credentials,
+  isPrimaryActionDisabled,
+  isSubmitDisabled,
+  form,
+  hasToken,
+  helperLinks,
+  mode,
+  resendCooldownMessage,
   roleOptions,
+  showPrimaryAction,
   authHeading,
   authUi,
   locale,
@@ -15,25 +24,44 @@ const {
   setTheme,
   setEmail,
   setPassword,
-  handleLogin,
+  setFullName,
+  setCompanyName,
+  setName,
+  setSurname,
+  setNewPassword,
+  handleSubmit,
 } = useAuthView()
 </script>
 
 <template>
   <AuthScreen
-    :credentials="credentials"
+    :mode="mode"
+    :form="form"
     :role-options="roleOptions"
     :auth-heading="authHeading"
     :auth-error="authError"
+    :auth-info="authInfo"
+    :auth-success="authSuccess"
+    :has-token="hasToken"
+    :is-primary-action-disabled="isPrimaryActionDisabled"
+    :is-submit-disabled="isSubmitDisabled"
     :is-submitting="isSubmitting"
+    :helper-links="helperLinks"
     :locale="locale"
+    :resend-cooldown-message="resendCooldownMessage"
+    :show-primary-action="showPrimaryAction"
     :theme="theme"
     :ui="authUi"
     @update-role="setRole"
     @update-email="setEmail"
     @update-password="setPassword"
+    @update-full-name="setFullName"
+    @update-company-name="setCompanyName"
+    @update-name="setName"
+    @update-surname="setSurname"
+    @update-new-password="setNewPassword"
     @update-locale="setLocale"
     @update-theme="setTheme"
-    @submit="handleLogin"
+    @submit="handleSubmit"
   />
 </template>

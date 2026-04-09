@@ -5,7 +5,6 @@ export type Locale = 'uk' | 'en'
 export interface TranslationDictionary {
   auth: {
     appName: string
-    loginTitle: string
     heroTitle: string
     heroDescription: string
     roleOwner: string
@@ -14,11 +13,62 @@ export interface TranslationDictionary {
     dispatcherDescription: string
     email: string
     password: string
+    newPassword: string
+    fullName: string
+    companyName: string
+    firstName: string
+    lastName: string
+    selectedLanguage: string
     signInOwner: string
     signInDispatcher: string
     signIn: string
     signingIn: string
     signInError: string
+    createOwnerAccount: string
+    creatingOwnerAccount: string
+    registerTitle: string
+    registerDescription: string
+    registerSuccess: string
+    checkEmailTitle: string
+    checkEmailDescription: string
+    checkEmailAction: string
+    verifyEmailTitle: string
+    verifyEmailDescription: string
+    verifyEmailAction: string
+    verifyingEmail: string
+    verifyEmailSuccess: string
+    verifyEmailLoading: string
+    verifyEmailInvalid: string
+    verifyEmailError: string
+    resendVerificationTitle: string
+    resendVerificationDescription: string
+    resendVerificationAction: string
+    resendingVerification: string
+    resendVerificationSuccess: string
+    forgotPasswordTitle: string
+    forgotPasswordDescription: string
+    forgotPasswordAction: string
+    sendingResetLink: string
+    forgotPasswordSuccess: string
+    resetPasswordTitle: string
+    resetPasswordDescription: string
+    resetPasswordAction: string
+    resettingPassword: string
+    resetPasswordSuccess: string
+    acceptInvitationTitle: string
+    acceptInvitationDescription: string
+    acceptInvitationAction: string
+    acceptingInvitation: string
+    acceptInvitationSuccess: string
+    backToLogin: string
+    registerLink: string
+    resendVerificationLink: string
+    forgotPasswordLink: string
+    tokenRequired: string
+    emailNotVerified: string
+    resendVerificationForEmail: string
+    resendAvailableIn: string
+    resendTooSoon: string
   }
   common: {
     language: string
@@ -72,20 +122,70 @@ export const translations: Record<Locale, TranslationDictionary> = {
   en: {
     auth: {
       appName: 'OrionixTrack',
-      loginTitle: 'Sign in',
       heroTitle: 'Manage operations',
-      heroDescription: 'Sign in to OrionixTrack',
+      heroDescription: '',
       roleOwner: 'Company Owner',
       roleDispatcher: 'Dispatcher',
-      ownerDescription: 'Access for the company owner.',
-      dispatcherDescription: 'Access for the dispatcher.',
+      ownerDescription: 'Access for the company owner',
+      dispatcherDescription: 'Access for the dispatcher',
       email: 'Email',
       password: 'Password',
+      newPassword: 'New password',
+      fullName: 'Full name',
+      companyName: 'Company name',
+      firstName: 'First name',
+      lastName: 'Last name',
+      selectedLanguage: 'Selected language',
       signInOwner: 'Company Owner',
       signInDispatcher: 'Dispatcher',
       signIn: 'Sign in',
       signingIn: 'Signing in...',
       signInError: 'Unable to sign in.',
+      createOwnerAccount: 'Create owner account',
+      creatingOwnerAccount: 'Creating account...',
+      registerTitle: 'Register company owner',
+      registerDescription: 'Create a new owner workspace and set up the company profile.',
+      registerSuccess: 'Registration completed. Check your inbox to verify the email.',
+      checkEmailTitle: 'Check your email',
+      checkEmailDescription: 'We sent you a confirmation email. Open the link in that email to activate your account.',
+      checkEmailAction: 'Resend verification email',
+      verifyEmailTitle: 'Verify email',
+      verifyEmailDescription: 'Confirm the email token to activate the owner account and continue automatically.',
+      verifyEmailAction: 'Verify email',
+      verifyingEmail: 'Verifying email...',
+      verifyEmailSuccess: 'Email verified, signing you in...',
+      verifyEmailLoading: 'Verifying your email...',
+      verifyEmailInvalid: 'The verification link is invalid or has expired.',
+      verifyEmailError: 'Unable to verify email.',
+      resendVerificationTitle: 'Resend verification email',
+      resendVerificationDescription: 'Request a new email verification link for the owner account.',
+      resendVerificationAction: 'Send verification email',
+      resendingVerification: 'Sending email...',
+      resendVerificationSuccess: 'Verification email has been sent.',
+      forgotPasswordTitle: 'Forgot password',
+      forgotPasswordDescription: '',
+      forgotPasswordAction: 'Send reset link',
+      sendingResetLink: 'Sending link...',
+      forgotPasswordSuccess: 'Password reset instructions have been sent if the account exists.',
+      resetPasswordTitle: 'Reset password',
+      resetPasswordDescription: 'Set a new password using the reset token from the email.',
+      resetPasswordAction: 'Set new password',
+      resettingPassword: 'Updating password...',
+      resetPasswordSuccess: 'Password updated. You can now sign in.',
+      acceptInvitationTitle: 'Accept invitation',
+      acceptInvitationDescription: 'Create the invited employee account and save the preferred language.',
+      acceptInvitationAction: 'Create account',
+      acceptingInvitation: 'Creating account...',
+      acceptInvitationSuccess: 'Invitation accepted. Sign in with the new credentials.',
+      backToLogin: 'Back to sign in',
+      registerLink: 'Create owner account',
+      resendVerificationLink: 'Resend verification email',
+      forgotPasswordLink: 'Forgot password?',
+      tokenRequired: 'A valid token is required to continue.',
+      emailNotVerified: 'Your email is not verified yet. Please confirm it before signing in.',
+      resendVerificationForEmail: 'Resend verification email',
+      resendAvailableIn: 'You can request another email in {time}.',
+      resendTooSoon: 'You recently requested a verification email. Please wait a bit before trying again.',
     },
     common: {
       language: 'Language',
@@ -137,20 +237,70 @@ export const translations: Record<Locale, TranslationDictionary> = {
   uk: {
     auth: {
       appName: 'OrionixTrack',
-      loginTitle: 'Вхід',
       heroTitle: 'Керуйте операціями',
-      heroDescription: 'Увійдіть до OrionixTrack',
+      heroDescription: '',
       roleOwner: 'Власник компанії',
       roleDispatcher: 'Диспетчер',
-      ownerDescription: 'Доступ для власника компанії.',
-      dispatcherDescription: 'Доступ для диспетчера.',
+      ownerDescription: 'Доступ для власника компанії',
+      dispatcherDescription: 'Доступ для диспетчера',
       email: 'Email',
       password: 'Пароль',
+      newPassword: 'Новий пароль',
+      fullName: "Повне ім'я",
+      companyName: 'Назва компанії',
+      firstName: "Ім'я",
+      lastName: 'Прізвище',
+      selectedLanguage: 'Обрана мова',
       signInOwner: 'Власник компанії',
       signInDispatcher: 'Диспетчер',
       signIn: 'Увійти',
       signingIn: 'Вхід...',
       signInError: 'Не вдалося виконати вхід.',
+      createOwnerAccount: 'Створити акаунт власника',
+      creatingOwnerAccount: 'Створення акаунта...',
+      registerTitle: 'Реєстрація власника компанії',
+      registerDescription: 'Створіть новий owner-акаунт і одразу налаштуйте профіль компанії.',
+      registerSuccess: 'Реєстрацію завершено. Перевірте пошту, щоб підтвердити email.',
+      checkEmailTitle: 'Перевірте пошту',
+      checkEmailDescription: 'Ми надіслали вам лист для підтвердження. Відкрийте посилання в листі, щоб активувати акаунт.',
+      checkEmailAction: 'Надіслати лист підтвердження ще раз',
+      verifyEmailTitle: 'Підтвердження email',
+      verifyEmailDescription: 'Підтвердьте токен з листа, щоб активувати акаунт owner і продовжити автоматично.',
+      verifyEmailAction: 'Підтвердити email',
+      verifyingEmail: 'Підтвердження email...',
+      verifyEmailSuccess: 'Email підтверджено, входимо в акаунт...',
+      verifyEmailLoading: 'Підтверджуємо email...',
+      verifyEmailInvalid: 'Посилання недійсне або прострочене.',
+      verifyEmailError: 'Не вдалося підтвердити email.',
+      resendVerificationTitle: 'Повторна відправка листа',
+      resendVerificationDescription: 'Запросіть новий лист для підтвердження owner-акаунта.',
+      resendVerificationAction: 'Надіслати лист підтвердження',
+      resendingVerification: 'Надсилання листа...',
+      resendVerificationSuccess: 'Лист для підтвердження надіслано.',
+      forgotPasswordTitle: 'Забули пароль',
+      forgotPasswordDescription: '',
+      forgotPasswordAction: 'Надіслати посилання',
+      sendingResetLink: 'Надсилання посилання...',
+      forgotPasswordSuccess: 'Інструкцію зі скидання пароля надіслано, якщо акаунт існує.',
+      resetPasswordTitle: 'Скидання пароля',
+      resetPasswordDescription: 'Встановіть новий пароль за токеном із листа.',
+      resetPasswordAction: 'Встановити новий пароль',
+      resettingPassword: 'Оновлення пароля...',
+      resetPasswordSuccess: 'Пароль оновлено. Тепер можна увійти.',
+      acceptInvitationTitle: 'Прийняття інвайту',
+      acceptInvitationDescription: 'Створіть акаунт запрошеного працівника та збережіть бажану мову.',
+      acceptInvitationAction: 'Створити акаунт',
+      acceptingInvitation: 'Створення акаунта...',
+      acceptInvitationSuccess: 'Інвайт прийнято. Увійдіть з новими даними.',
+      backToLogin: 'Повернутися до входу',
+      registerLink: 'Створити акаунт власника',
+      resendVerificationLink: 'Повторно надіслати лист',
+      forgotPasswordLink: 'Забули пароль?',
+      tokenRequired: 'Потрібен валідний токен, щоб продовжити.',
+      emailNotVerified: 'Пошта ще не підтверджена. Будь ласка, підтвердьте її перед входом.',
+      resendVerificationForEmail: 'Надіслати лист підтвердження ще раз',
+      resendAvailableIn: 'Новий лист можна запросити через {time}.',
+      resendTooSoon: 'Ви вже нещодавно запитували лист підтвердження. Зачекайте трохи й спробуйте ще раз.',
     },
     common: {
       language: 'Мова',

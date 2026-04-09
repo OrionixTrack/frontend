@@ -20,6 +20,63 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/check-email',
+    name: 'check-email',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/auth/verify-email',
+    name: 'verify-email',
+    component: () => import('@/views/AuthView.vue'),
+    alias: ['/verify-email'],
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/resend-verification',
+    name: 'resend-verification',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
+    path: '/accept-invitation',
+    name: 'accept-invitation',
+    component: () => import('@/views/AuthView.vue'),
+    meta: {
+      guestOnly: true,
+    },
+  },
+  {
     path: '/dashboard',
     name: 'dashboard',
     component: () => import('@/views/DashboardView.vue'),
