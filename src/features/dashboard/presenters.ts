@@ -113,7 +113,7 @@ export const getRoleNavigation = (
             { id: 'fleet', label: t.dashboard.ownerFleet, routeName: 'owner-vehicles' },
             { id: 'trackers', label: t.dashboard.ownerTrackers, routeName: 'owner-trackers' },
             { id: 'channels', label: t.dashboard.ownerChannels, routeName: 'owner-channels' },
-            { id: 'trips', label: t.dashboard.ownerTrips, routeName: null },
+            { id: 'trips', label: t.dashboard.ownerTrips, routeName: 'owner-trips' },
           ],
         },
       ]

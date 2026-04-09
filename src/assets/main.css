@@ -867,6 +867,48 @@
   overflow-wrap: anywhere;
 }
 
+.trip-map {
+  width: 100%;
+  min-height: 280px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-strong);
+}
+
+.trip-map-marker-shell {
+  background: transparent;
+  border: 0;
+}
+
+.trip-map-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(8, 17, 32, 0.78);
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(8, 17, 32, 0.28);
+  color: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.trip-map-marker-start {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.trip-map-marker-finish {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.trip-map-marker-current {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  font-size: 1rem;
+}
+
 .invitations-list {
   gap: 0;
 }
@@ -1312,6 +1354,212 @@
   flex: none;
 }
 
+.trips-layout {
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  align-items: start;
+}
+
+.trips-list-panel,
+.trips-detail-panel {
+  grid-column: span 1;
+}
+
+.trips-filters {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.01));
+}
+
+.trips-list-toolbar {
+  margin: 0;
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(200px, 0.5fr));
+}
+
+.trips-filter-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 14px;
+  align-items: end;
+}
+
+.trip-status-field,
+.trip-order-field {
+  min-width: 0;
+}
+
+.trip-status-select {
+  width: 100%;
+}
+
+.trip-cards,
+.trip-detail-stack,
+.trip-stats-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.trip-card {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.trip-card:hover,
+.trip-card.active {
+  border-color: rgba(138, 180, 255, 0.42);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.trips-table {
+  min-width: 1180px;
+}
+
+.trip-name-cell {
+  min-width: 260px;
+}
+
+.trip-table-primary {
+  display: grid;
+  gap: 8px;
+}
+
+.trip-table-primary strong {
+  color: var(--text);
+}
+
+.trip-table-primary span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.trip-vehicle-cell {
+  max-width: 280px;
+  overflow-wrap: anywhere;
+}
+
+.trip-card-header,
+.trip-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trip-card-title,
+.trip-card-meta,
+.trip-info-card,
+.trip-route-point,
+.trip-detail-empty,
+.trip-stat-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.trip-card-title strong,
+.trip-card-meta strong,
+.trip-info-card strong,
+.trip-route-point strong,
+.trip-stat-panel h4 {
+  color: var(--text);
+}
+
+.trip-card-title span,
+.trip-card-meta span,
+.trip-info-card span,
+.trip-route-point span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.trip-card-grid,
+.trip-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trip-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trip-detail-tabs {
+  margin-bottom: 14px;
+}
+
+.trip-route-card,
+.trip-stat-panel {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+}
+
+.trip-route-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.trip-route-point small {
+  color: var(--text-muted);
+}
+
+.trip-route-line {
+  display: none;
+}
+
+.trip-chart-bars {
+  margin-top: 18px;
+  min-height: 180px;
+}
+
+.trip-chart-bars .chart-bar-rail {
+  max-width: 32px;
+  height: 120px;
+}
+
+.trip-chart-canvas {
+  min-height: 240px;
+  margin-top: 18px;
+  padding: 16px 16px 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-md) - 4px);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 45%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.trip-detail-empty {
+  min-height: 240px;
+  place-items: center;
+  text-align: center;
+}
+
 .employees-pagination {
   display: flex;
   align-items: center;
@@ -1444,7 +1692,19 @@
     grid-template-columns: 1fr;
   }
 
+  .trips-filter-bottom {
+    grid-template-columns: 1fr;
+  }
+
   .employees-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .trips-layout,
+  .trip-card-grid,
+  .trip-info-grid,
+  .trip-metric-grid,
+  .trip-route-points {
     grid-template-columns: 1fr;
   }
 

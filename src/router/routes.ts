@@ -141,6 +141,24 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/owner/trips',
+    name: 'owner-trips',
+    component: () => import('@/views/TripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
+    path: '/owner/trips/:tripId',
+    name: 'owner-trip-details',
+    component: () => import('@/views/TripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['owner'],
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

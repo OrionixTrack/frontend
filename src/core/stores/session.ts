@@ -11,6 +11,23 @@ interface PersistedSession {
   user: SessionUser
 }
 
+const readStoredSession = (): string | null => {
+  const persisted = localStorage.getItem(STORAGE_KEY)
+
+  if (persisted) {
+    return persisted
+  }
+
+  const legacy = sessionStorage.getItem(STORAGE_KEY)
+
+  if (legacy) {
+    localStorage.setItem(STORAGE_KEY, legacy)
+    sessionStorage.removeItem(STORAGE_KEY)
+  }
+
+  return legacy
+}
+
 interface SessionStore {
   session: Readonly<SessionState>
   isAuthenticated: ComputedRef<boolean>
@@ -35,11 +52,12 @@ const createSessionStore = (): SessionStore => {
 
   const persistSession = (): void => {
     if (!state.accessToken || !state.role || !state.user) {
+      localStorage.removeItem(STORAGE_KEY)
       sessionStorage.removeItem(STORAGE_KEY)
       return
     }
 
-    sessionStorage.setItem(
+    localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
         accessToken: state.accessToken,
@@ -81,7 +99,7 @@ const createSessionStore = (): SessionStore => {
       return
     }
 
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const raw = readStoredSession()
 
     if (raw) {
       try {
@@ -97,6 +115,7 @@ const createSessionStore = (): SessionStore => {
           state.user = parsed.user
         }
       } catch {
+        localStorage.removeItem(STORAGE_KEY)
         sessionStorage.removeItem(STORAGE_KEY)
       }
     }

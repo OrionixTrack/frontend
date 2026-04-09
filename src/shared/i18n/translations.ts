@@ -390,6 +390,71 @@ export interface TranslationDictionary {
     statusCompleted: string
     statusCancelled: string
   }
+  trips: {
+    pageTitle: string
+    listTitle: string
+    description: string
+    searchLabel: string
+    searchPlaceholder: string
+    dateFromLabel: string
+    dateToLabel: string
+    sortByLabel: string
+    sortOrderLabel: string
+    statusLabel: string
+    allStatuses: string
+    statusPlanned: string
+    statusInProgress: string
+    statusCompleted: string
+    statusCancelled: string
+    sortPlannedStart: string
+    sortTripId: string
+    sortStatus: string
+    ascending: string
+    descending: string
+    empty: string
+    emptySearch: string
+    loadError: string
+    detailTitle: string
+    detailLoadError: string
+    statsLoadError: string
+    noTripSelected: string
+    closeDetails: string
+    selectTripPrompt: string
+    overviewTabLabel: string
+    statsTabLabel: string
+    plannedStartLabel: string
+    actualStartLabel: string
+    endLabel: string
+    contactLabel: string
+    driverLabel: string
+    vehicleLabel: string
+    dispatcherLabel: string
+    descriptionLabel: string
+    noDescription: string
+    noPersonAssigned: string
+    noVehicleAssigned: string
+    routeTitle: string
+    routeDescription: string
+    routeTrackAvailable: string
+    routeTrackUnavailable: string
+    startPointLabel: string
+    currentPointLabel: string
+    finishPointLabel: string
+    telemetryTitle: string
+    telemetryDescription: string
+    latestTelemetryTitle: string
+    latestTelemetryDescription: string
+    speedLabel: string
+    temperatureLabel: string
+    humidityLabel: string
+    telemetryTimeLabel: string
+    noTelemetry: string
+    totalPointsLabel: string
+    minLabel: string
+    maxLabel: string
+    avgLabel: string
+    noStats: string
+  }
   ownerSettings: {
     pageTitle: string
     profileTitle: string
@@ -806,6 +871,71 @@ export const translations: Record<Locale, TranslationDictionary> = {
       statusCompleted: 'Completed',
       statusCancelled: 'Cancelled',
     },
+    trips: {
+      pageTitle: 'Trips',
+      listTitle: 'Operations overview',
+      description: 'Review scheduled, active, completed, and cancelled trips with live route context and trip analytics.',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by trip name or address',
+      dateFromLabel: 'Date from',
+      dateToLabel: 'Date to',
+      sortByLabel: 'Sort by',
+      sortOrderLabel: 'Order',
+      statusLabel: 'Status',
+      allStatuses: 'All',
+      statusPlanned: 'Planned',
+      statusInProgress: 'In progress',
+      statusCompleted: 'Completed',
+      statusCancelled: 'Cancelled',
+      sortPlannedStart: 'Planned start',
+      sortTripId: 'Trip ID',
+      sortStatus: 'Status',
+      ascending: 'Ascending',
+      descending: 'Descending',
+      empty: 'No trips found yet.',
+      emptySearch: 'No trips match the current filters.',
+      loadError: 'Trips could not be loaded.',
+      detailTitle: 'Trip details',
+      detailLoadError: 'Trip details could not be loaded.',
+      statsLoadError: 'Trip analytics could not be loaded.',
+      noTripSelected: 'Select a trip',
+      closeDetails: 'Go back',
+      selectTripPrompt: 'Choose a trip from the list to review route details and analytics.',
+      overviewTabLabel: 'Overview',
+      statsTabLabel: 'Stats',
+      plannedStartLabel: 'Planned start',
+      actualStartLabel: 'Actual start',
+      endLabel: 'Completed at',
+      contactLabel: 'Contact',
+      driverLabel: 'Driver',
+      vehicleLabel: 'Vehicle',
+      dispatcherLabel: 'Dispatcher',
+      descriptionLabel: 'Description',
+      noDescription: 'No description provided.',
+      noPersonAssigned: 'Not assigned',
+      noVehicleAssigned: 'No vehicle assigned',
+      routeTitle: 'Route map',
+      routeDescription: 'Start, finish, and current trip position on the route.',
+      routeTrackAvailable: 'Track available',
+      routeTrackUnavailable: 'No live track yet',
+      startPointLabel: 'Start',
+      currentPointLabel: 'Current position',
+      finishPointLabel: 'Finish',
+      telemetryTitle: 'Current telemetry',
+      telemetryDescription: 'Latest telemetry snapshot received for this trip.',
+      latestTelemetryTitle: 'Latest telemetry',
+      latestTelemetryDescription: 'Last telemetry snapshot captured for this trip.',
+      speedLabel: 'Speed',
+      temperatureLabel: 'Temperature',
+      humidityLabel: 'Humidity',
+      telemetryTimeLabel: 'Reported at',
+      noTelemetry: 'Telemetry has not been received yet.',
+      totalPointsLabel: 'Telemetry points',
+      minLabel: 'Min',
+      maxLabel: 'Max',
+      avgLabel: 'Avg',
+      noStats: 'No trip statistics available yet.',
+    },
     ownerSettings: {
       pageTitle: 'Company settings',
       profileTitle: 'Owner profile',
@@ -1220,6 +1350,71 @@ export const translations: Record<Locale, TranslationDictionary> = {
       statusInProgress: 'У процесі',
       statusCompleted: 'Завершений',
       statusCancelled: 'Скасований',
+    },
+    trips: {
+      pageTitle: 'Рейси',
+      listTitle: 'Огляд перевезень',
+      description: 'Переглядайте заплановані, активні, завершені та скасовані рейси разом із маршрутом і аналітикою.',
+      searchLabel: 'Пошук',
+      searchPlaceholder: 'Пошук за назвою рейсу або адресою',
+      dateFromLabel: 'Дата від',
+      dateToLabel: 'Дата до',
+      sortByLabel: 'Сортувати за',
+      sortOrderLabel: 'Порядок',
+      statusLabel: 'Статус',
+      allStatuses: 'Усі',
+      statusPlanned: 'Запланований',
+      statusInProgress: 'У процесі',
+      statusCompleted: 'Завершений',
+      statusCancelled: 'Скасований',
+      sortPlannedStart: 'Плановим стартом',
+      sortTripId: 'ID рейсу',
+      sortStatus: 'Статусом',
+      ascending: 'За зростанням',
+      descending: 'За спаданням',
+      empty: 'Рейсів поки немає.',
+      emptySearch: 'За поточними фільтрами рейси не знайдено.',
+      loadError: 'Не вдалося завантажити рейси.',
+      detailTitle: 'Деталі рейсу',
+      detailLoadError: 'Не вдалося завантажити деталі рейсу.',
+      statsLoadError: 'Не вдалося завантажити аналітику рейсу.',
+      noTripSelected: 'Оберіть рейс',
+      closeDetails: 'Назад',
+      selectTripPrompt: 'Оберіть рейс зі списку, щоб переглянути маршрут, телеметрію й статистику.',
+      overviewTabLabel: 'Огляд',
+      statsTabLabel: 'Статистика',
+      plannedStartLabel: 'Плановий старт',
+      actualStartLabel: 'Фактичний старт',
+      endLabel: 'Завершено',
+      contactLabel: 'Контакт',
+      driverLabel: 'Водій',
+      vehicleLabel: 'Транспорт',
+      dispatcherLabel: 'Диспетчер',
+      descriptionLabel: 'Опис',
+      noDescription: 'Опис відсутній.',
+      noPersonAssigned: 'Не призначено',
+      noVehicleAssigned: 'Транспорт не призначено',
+      routeTitle: 'Мапа маршруту',
+      routeDescription: 'Точка старту, завершення та поточна позиція рейсу.',
+      routeTrackAvailable: 'Маршрут доступний',
+      routeTrackUnavailable: 'Ще немає треку',
+      startPointLabel: 'Старт',
+      currentPointLabel: 'Поточна позиція',
+      finishPointLabel: 'Фініш',
+      telemetryTitle: 'Поточна телеметрія',
+      telemetryDescription: 'Останній отриманий телеметричний стан для цього рейсу.',
+      latestTelemetryTitle: 'Остання телеметрія',
+      latestTelemetryDescription: 'Останній зафіксований телеметричний стан для цього рейсу.',
+      speedLabel: 'Швидкість',
+      temperatureLabel: 'Температура',
+      humidityLabel: 'Вологість',
+      telemetryTimeLabel: 'Час отримання',
+      noTelemetry: 'Телеметрія ще не надходила.',
+      totalPointsLabel: 'Точок телеметрії',
+      minLabel: 'Мін',
+      maxLabel: 'Макс',
+      avgLabel: 'Сер',
+      noStats: 'Статистика рейсу поки недоступна.',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',

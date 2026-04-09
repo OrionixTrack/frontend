@@ -1,0 +1,85 @@
+<script setup lang="ts">
+import { TripDetailsScreen, TripsListScreen, useTripsView } from '@features/trips'
+
+const {
+  activeProfile,
+  closeTripDetails,
+  detailError,
+  detailTab,
+  filters,
+  handleLogout,
+  hasNextPage,
+  isDetailLoading,
+  isInitialLoading,
+  isLoading,
+  isLoadingMore,
+  isStatsLoading,
+  items,
+  loadMoreTrips,
+  locale,
+  messages,
+  openTripDetails,
+  pageError,
+  selectedTrip,
+  selectedTripId,
+  selectedTripStats,
+  session,
+  setDateFrom,
+  setDateTo,
+  setDetailTab,
+  setSearch,
+  setSortBy,
+  setSortOrder,
+  setStatus,
+  setTheme,
+  statsError,
+  theme,
+} = useTripsView()
+</script>
+
+<template>
+  <TripDetailsScreen
+    v-if="selectedTripId"
+    :session="session"
+    :active-profile="activeProfile"
+    :locale="locale"
+    :messages="messages"
+    :theme="theme"
+    :selected-trip="selectedTrip"
+    :detail-error="detailError"
+    :is-detail-loading="isDetailLoading"
+    :detail-tab="detailTab"
+    :selected-trip-stats="selectedTripStats"
+    :stats-error="statsError"
+    :is-stats-loading="isStatsLoading"
+    @logout="handleLogout"
+    @update-theme="setTheme"
+    @close-trip-details="closeTripDetails"
+    @update-detail-tab="setDetailTab"
+  />
+  <TripsListScreen
+    v-else
+    :session="session"
+    :active-profile="activeProfile"
+    :locale="locale"
+    :messages="messages"
+    :theme="theme"
+    :trips="items"
+    :filters="filters"
+    :page-error="pageError"
+    :is-loading="isLoading"
+    :is-initial-loading="isInitialLoading"
+    :has-next-page="hasNextPage"
+    :is-loading-more="isLoadingMore"
+    @logout="handleLogout"
+    @update-theme="setTheme"
+    @update-search-query="setSearch"
+    @update-sort-by="setSortBy"
+    @update-sort-order="setSortOrder"
+    @update-status="setStatus"
+    @update-date-from="setDateFrom"
+    @update-date-to="setDateTo"
+    @open-trip-details="openTripDetails"
+    @load-more="loadMoreTrips"
+  />
+</template>
