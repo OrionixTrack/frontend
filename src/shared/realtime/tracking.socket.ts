@@ -2,16 +2,21 @@ import { io, type Socket } from 'socket.io-client'
 
 import { API_BASE_URL } from '@core/api'
 
-import type { OwnerTripStatus } from '../types/OwnerTripStatus'
-import type { OwnerTripTelemetry } from '../types/OwnerTripTelemetry'
+export type RealtimeTripStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled'
 
 export interface TripStatusEventPayload {
   tripId: number
-  status: OwnerTripStatus
+  status: RealtimeTripStatus
 }
 
-export interface TelemetryUpdateEventPayload extends OwnerTripTelemetry {
+export interface TelemetryUpdateEventPayload {
   tripId: number
+  latitude: number
+  longitude: number
+  speed?: number | null
+  datetime: string
+  temperature?: number | null
+  humidity?: number | null
 }
 
 const trackingSocketUrl = `${API_BASE_URL}/tracking`

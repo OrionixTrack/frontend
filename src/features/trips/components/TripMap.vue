@@ -19,20 +19,27 @@ let layerGroup: L.LayerGroup | null = null
 let resizeObserver: ResizeObserver | null = null
 let tileLayer: L.TileLayer | null = null
 
-const getTileLayerUrl = (): string =>
+const getTileLayerConfig = (): { url: string; subdomains: string } =>
   props.theme === 'dark'
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+    ? {
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        subdomains: 'abcd',
+      }
+    : {
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        subdomains: 'abcd',
+      }
 
 const syncTileLayer = (): void => {
   if (!map) {
     return
   }
 
+  const config = getTileLayerConfig()
   tileLayer?.remove()
-  tileLayer = L.tileLayer(getTileLayerUrl(), {
+  tileLayer = L.tileLayer(config.url, {
     maxZoom: 19,
-    subdomains: props.theme === 'dark' ? 'abcd' : undefined,
+    subdomains: config.subdomains,
   }).addTo(map)
 }
 

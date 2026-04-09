@@ -121,6 +121,15 @@ export interface TranslationDictionary {
     inProgress: string
     completed: string
     cancelled: string
+    liveMapKicker: string
+    liveMapTitle: string
+    liveMapDescription: string
+    liveMapLoadError: string
+    liveMapEmpty: string
+    liveMapNoActiveTrip: string
+    liveMapNoPosition: string
+    liveMapUpdatedAt: string
+    liveMapSpeed: string
   }
   invitations: {
     pageTitle: string
@@ -599,6 +608,15 @@ export const translations: Record<Locale, TranslationDictionary> = {
       inProgress: 'In progress',
       completed: 'Completed',
       cancelled: 'Cancelled',
+      liveMapKicker: 'Live map',
+      liveMapTitle: 'Fleet live overview',
+      liveMapDescription: 'Monitor the latest vehicle positions, active trips, and movement status across the company.',
+      liveMapLoadError: 'Live map data could not be loaded.',
+      liveMapEmpty: 'No active vehicle positions are available right now.',
+      liveMapNoActiveTrip: 'No active trip',
+      liveMapNoPosition: 'No position data',
+      liveMapUpdatedAt: 'Last update',
+      liveMapSpeed: 'Speed',
     },
     invitations: {
       pageTitle: 'Invitations',
@@ -1078,6 +1096,15 @@ export const translations: Record<Locale, TranslationDictionary> = {
       inProgress: 'У процесі',
       completed: 'Завершені',
       cancelled: 'Скасовані',
+      liveMapKicker: 'Жива мапа',
+      liveMapTitle: 'Live-огляд рухомого складу',
+      liveMapDescription: 'Слідкуйте за останніми позиціями транспорту, активними рейсами та рухом по компанії в реальному часі.',
+      liveMapLoadError: 'Не вдалося завантажити дані живої мапи.',
+      liveMapEmpty: 'Зараз немає активних позицій транспорту.',
+      liveMapNoActiveTrip: 'Без активного рейсу',
+      liveMapNoPosition: 'Немає даних позиції',
+      liveMapUpdatedAt: 'Останнє оновлення',
+      liveMapSpeed: 'Швидкість',
     },
     invitations: {
       pageTitle: 'Інвайти',

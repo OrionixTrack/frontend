@@ -32,6 +32,10 @@ const hasRouteName = (item: NavigationItem): item is NavigationItem & { routeNam
   item.routeName !== null
 const roleLabel = computed(() => getRoleLabel(props.locale, props.session.role))
 const userDisplayName = computed(() => getUserDisplayName(props.session.role, props.activeProfile))
+const brandTitle = computed(() => (props.session.role === 'owner' ? '' : roleLabel.value))
+const showTopbar = computed(
+  () => !(props.session.role === 'owner' && props.title === props.messages.dashboard.workspaceOwner),
+)
 const navigationGroups = computed(() => getRoleNavigation(props.locale, props.session.role))
 const navigationGroupsByAvailability = computed(() =>
   navigationGroups.value.map((group) => ({
@@ -52,7 +56,7 @@ watch(
   <div class="app-shell">
     <aside class="app-rail">
       <div class="rail-head">
-        <AppBrand :eyebrow="messages.auth.appName" :title="roleLabel" />
+        <AppBrand :eyebrow="messages.auth.appName" :title="brandTitle" />
         <BaseButton
           class="btn btn-secondary mobile-menu-toggle"
           type="button"
@@ -110,7 +114,7 @@ watch(
     </aside>
 
     <main class="dashboard-stage">
-      <header class="dashboard-topbar">
+      <header v-if="showTopbar" class="dashboard-topbar">
         <div class="dashboard-title">
           <p class="eyebrow">{{ roleLabel }}</p>
           <h2>{{ title }}</h2>

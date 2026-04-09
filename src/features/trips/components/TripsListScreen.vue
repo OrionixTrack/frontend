@@ -272,11 +272,18 @@ watch([loadMoreTrigger, () => props.hasNextPage, () => props.isLoading], connect
                 <th>{{ messages.trips.driverLabel }}</th>
                 <th>{{ messages.trips.vehicleLabel }}</th>
                 <th>{{ messages.trips.dispatcherLabel }}</th>
-                <th>{{ messages.common.overview }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="trip in trips" :key="trip.id">
+              <tr
+                v-for="trip in trips"
+                :key="trip.id"
+                class="trip-table-row"
+                tabindex="0"
+                @click="emit('openTripDetails', trip.id)"
+                @keydown.enter.prevent="emit('openTripDetails', trip.id)"
+                @keydown.space.prevent="emit('openTripDetails', trip.id)"
+              >
                 <td>{{ trip.id }}</td>
                 <td class="trip-name-cell">
                   <div class="trip-table-primary">
@@ -293,11 +300,6 @@ watch([loadMoreTrigger, () => props.hasNextPage, () => props.isLoading], connect
                 <td>{{ formatPerson(trip.driver) }}</td>
                 <td class="trip-vehicle-cell">{{ formatVehicle(trip.vehicle) }}</td>
                 <td>{{ formatPerson(trip.createdByDispatcher) }}</td>
-                <td>
-                  <BaseButton class="btn btn-secondary employee-action-button" @click="emit('openTripDetails', trip.id)">
-                    {{ messages.trips.overviewTabLabel }}
-                  </BaseButton>
-                </td>
               </tr>
             </tbody>
           </table>

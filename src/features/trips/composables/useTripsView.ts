@@ -5,10 +5,6 @@ import {getSafeErrorMessage} from '@core/api'
 import {useSessionStore} from '@core/stores/session'
 import {useApiState} from '@shared/composables/useApiState'
 import {useI18n} from '@shared/composables/useI18n'
-import {useTheme} from '@shared/composables/useTheme'
-import type {OwnerUser} from '@shared/types'
-
-import {getOwnerTrip, getOwnerTrips, getOwnerTripStats} from '../api/trips.api'
 import {
   connectTrackingSocket,
   disconnectTrackingSocket,
@@ -18,7 +14,11 @@ import {
   subscribeTrip,
   unsubscribeCompany,
   unsubscribeTrip,
-} from '../live/tracking.socket'
+} from '@shared/realtime/tracking.socket'
+import {useTheme} from '@shared/composables/useTheme'
+import type {OwnerUser} from '@shared/types'
+
+import {getOwnerTrip, getOwnerTrips, getOwnerTripStats} from '../api/trips.api'
 import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '../live/trips.live'
 import type {OwnerTripItem} from '../types/OwnerTripItem'
 import type {OwnerTripSortBy} from '../types/OwnerTripSortBy'
