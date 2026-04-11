@@ -5,6 +5,9 @@ const {
   actionSuccess,
   activeProfile,
   availableTrips,
+  canCreateChannels,
+  canDeleteChannels,
+  canRenameChannels,
   channelError,
   closeChannelDialog,
   closeDeleteDialog,
@@ -60,6 +63,9 @@ const {
     :theme="theme"
     :channels="items"
     :available-trips="availableTrips"
+    :can-create-channels="canCreateChannels"
+    :can-delete-channels="canDeleteChannels"
+    :can-rename-channels="canRenameChannels"
     :trip-picker-options="tripPickerOptions"
     :selected-trip-label="selectedTripLabel"
     :trip-search-query="tripSearchQuery"

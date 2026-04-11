@@ -6,11 +6,17 @@ import { useSessionStore } from '@core/stores/session'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
-import type { OwnerUser } from '@shared/types'
+import type { DispatcherUser, OwnerUser } from '@shared/types'
 
 import {
+  assignDispatcherTrackingChannelTrip,
   createTrackingChannel,
   deleteTrackingChannel,
+  getDispatcherChannelTrip,
+  getDispatcherChannelTrips,
+  getDispatcherTrackingChannel,
+  getDispatcherTrackingChannels,
+  getTrackingChannel,
   getOwnerTrips,
   getTrackingChannels,
   updateTrackingChannel,
@@ -104,7 +110,10 @@ export const useChannelsView = () => {
     execute: executeTripOptions,
   } = useApiState('')
 
-  const activeProfile = ref<OwnerUser | null>((session.user as OwnerUser | null) ?? null)
+  const isDispatcher = computed(() => session.role === 'dispatcher')
+  const activeProfile = ref<OwnerUser | DispatcherUser | null>(
+    (session.user as OwnerUser | DispatcherUser | null) ?? null,
+  )
   const directory = reactive<ChannelDirectoryState>(createDirectoryState())
   const tripPicker = reactive<TripPickerState>(createTripPickerState())
   const selectedTripOption = ref<OwnerTripItem | null>(null)
@@ -125,6 +134,9 @@ export const useChannelsView = () => {
   const isLoadingMore = computed(() => isLoading.value && directory.hasLoaded && directory.filters.offset > 0)
   const hasNextPage = computed(() => directory.hasNextPage)
   const isEditingChannel = computed(() => selectedChannelForEdit.value !== null)
+  const canCreateChannels = computed(() => !isDispatcher.value)
+  const canDeleteChannels = computed(() => !isDispatcher.value)
+  const canRenameChannels = computed(() => !isDispatcher.value)
   const availableTrips = computed(() => {
     const mergedItems = [...tripPicker.items]
 
@@ -183,7 +195,7 @@ export const useChannelsView = () => {
     try {
       const channels = await executePage(
         () =>
-          getTrackingChannels(
+          (isDispatcher.value ? getDispatcherTrackingChannels : getTrackingChannels)(
             {
               limit: directory.filters.limit,
               offset: directory.filters.offset,
@@ -210,19 +222,22 @@ export const useChannelsView = () => {
 
   const loadSelectedTripOption = async (tripId: number, signal?: AbortSignal): Promise<void> => {
     try {
-      const trips = await getOwnerTrips(
-        {
-          limit: 50,
-          offset: 0,
-          search: String(tripId),
-          sortBy: 'trip_id',
-          sortOrder: 'ASC',
-        },
-        signal,
-      )
+      selectedTripOption.value = isDispatcher.value
+        ? await getDispatcherChannelTrip(tripId, signal)
+        : await (async () => {
+            const trips = await getOwnerTrips(
+              {
+                limit: 50,
+                offset: 0,
+                search: String(tripId),
+                sortBy: 'trip_id',
+                sortOrder: 'ASC',
+              },
+              signal,
+            )
 
-      selectedTripOption.value =
-        (Array.isArray(trips) ? trips : []).find((trip) => trip.id === tripId) ?? null
+            return (Array.isArray(trips) ? trips : []).find((trip) => trip.id === tripId) ?? null
+          })()
     } catch {
       return
     }
@@ -232,7 +247,7 @@ export const useChannelsView = () => {
     try {
       const trips = await executeTripOptions(
         () =>
-          getOwnerTrips(
+          (isDispatcher.value ? getDispatcherChannelTrips : getOwnerTrips)(
             {
               limit: tripPicker.filters.limit,
               offset: tripPicker.filters.offset,
@@ -359,6 +374,10 @@ export const useChannelsView = () => {
   }
 
   const openCreateDialog = (): void => {
+    if (!canCreateChannels.value) {
+      return
+    }
+
     resetFeedback()
     resetChannelError()
     selectedChannelForEdit.value = null
@@ -368,16 +387,25 @@ export const useChannelsView = () => {
     isChannelDialogOpen.value = true
   }
 
-  const openEditDialog = (channel: TrackingChannelItem): void => {
+  const openEditDialog = async (channel: TrackingChannelItem): Promise<void> => {
     resetFeedback()
     resetChannelError()
-    selectedChannelForEdit.value = channel
-    syncForm(channel)
+    const detail = await executeChannelAction(
+      () => (isDispatcher.value ? getDispatcherTrackingChannel(channel.id) : getTrackingChannel(channel.id)),
+      (error) => getSafeErrorMessage(error, messages.value.channels.loadError),
+    ).catch(() => null)
+
+    if (!detail) {
+      return
+    }
+
+    selectedChannelForEdit.value = detail
+    syncForm(detail)
     Object.assign(tripPicker, createTripPickerState())
     isChannelDialogOpen.value = true
 
-    if (channel.assigned_trip_id) {
-      void loadSelectedTripOption(channel.assigned_trip_id)
+    if (detail.assigned_trip_id) {
+      void loadSelectedTripOption(detail.assigned_trip_id)
     } else {
       selectedTripOption.value = null
     }
@@ -393,6 +421,10 @@ export const useChannelsView = () => {
   }
 
   const openDeleteDialog = (channel: TrackingChannelItem): void => {
+    if (!canDeleteChannels.value) {
+      return
+    }
+
     resetFeedback()
     resetDeleteError()
     selectedChannelForDelete.value = channel
@@ -409,17 +441,29 @@ export const useChannelsView = () => {
     resetFeedback()
     resetChannelError()
 
-    const payload = {
-      name: form.name.trim(),
-      assigned_trip_id: form.assignedTripId ? Number(form.assignedTripId) : null,
-    }
-
     try {
       await executeChannelAction(
         () =>
-          selectedChannelForEdit.value
-            ? updateTrackingChannel(selectedChannelForEdit.value.id, payload)
-            : createTrackingChannel(payload),
+          isDispatcher.value
+            ? (() => {
+                if (!selectedChannelForEdit.value) {
+                  return Promise.reject(new Error('Channel must be selected before assignment'))
+                }
+
+                return assignDispatcherTrackingChannelTrip(selectedChannelForEdit.value.id, {
+                  tripId: form.assignedTripId ? Number(form.assignedTripId) : null,
+                })
+              })()
+            : (() => {
+                const payload = {
+                  name: form.name.trim(),
+                  assigned_trip_id: form.assignedTripId ? Number(form.assignedTripId) : null,
+                }
+
+                return selectedChannelForEdit.value
+                  ? updateTrackingChannel(selectedChannelForEdit.value.id, payload)
+                  : createTrackingChannel(payload)
+              })(),
         (error) => {
           if (isApiError(error) && error.status === 400) {
             return messages.value.channels.tripConflict
@@ -429,7 +473,7 @@ export const useChannelsView = () => {
         },
       )
 
-      actionSuccess.value = selectedChannelForEdit.value
+      actionSuccess.value = selectedChannelForEdit.value || isDispatcher.value
         ? messages.value.channels.updateSuccess
         : messages.value.channels.createSuccess
       closeChannelDialog()
@@ -467,6 +511,9 @@ export const useChannelsView = () => {
     actionSuccess,
     activeProfile,
     availableTrips,
+    canCreateChannels,
+    canDeleteChannels,
+    canRenameChannels,
     channelError,
     closeChannelDialog,
     closeDeleteDialog,

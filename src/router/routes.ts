@@ -132,6 +132,15 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/dispatcher/channels',
+    name: 'dispatcher-channels',
+    component: () => import('@/views/ChannelsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
     path: '/owner/settings',
     name: 'owner-settings',
     component: () => import('@/views/OwnerSettingsView.vue'),

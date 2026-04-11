@@ -9,7 +9,7 @@ import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import { useSnackbar } from '@shared/composables/useSnackbar'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
-import type { OwnerUser, SessionState } from '@shared/types'
+import type { SessionState } from '@shared/types'
 
 import type { OwnerTripItem } from '../types/OwnerTripItem'
 import type { TrackingChannelItem } from '../types/TrackingChannelItem'
@@ -18,12 +18,15 @@ import type { TrackingChannelSortOrder } from '../types/TrackingChannelSortOrder
 
 const props = defineProps<{
   session: Readonly<SessionState>
-  activeProfile: OwnerUser | null
+  activeProfile: SessionState['user']
   locale: Locale
   messages: TranslationDictionary
   theme: AppTheme
   channels: TrackingChannelItem[]
   availableTrips: OwnerTripItem[]
+  canCreateChannels: boolean
+  canDeleteChannels: boolean
+  canRenameChannels: boolean
   tripPickerOptions: Array<{ value: string; label: string }>
   selectedTripLabel: string
   tripSearchQuery: string
@@ -80,11 +83,26 @@ let observer: IntersectionObserver | null = null
 
 const sortOptions: TrackingChannelSortBy[] = ['name', 'tracking_channel_id']
 const normalizedName = computed(() => props.form.name.trim())
-const hasValidationError = computed(() => !normalizedName.value)
+const hasValidationError = computed(() => props.canRenameChannels && !normalizedName.value)
 const shouldShowValidationError = computed(() => hasTriedSubmit.value && hasValidationError.value)
 const emptyStateMessage = computed(() =>
   props.searchQuery.trim() ? props.messages.channels.emptySearch : props.messages.channels.empty,
 )
+const dialogTitle = computed(() => {
+  if (!props.canRenameChannels) {
+    return props.messages.channels.manageTripTitle
+  }
+
+  return props.isEditingChannel ? props.messages.channels.editTitle : props.messages.channels.createTitle
+})
+
+const dialogDescription = computed(() => {
+  if (!props.canRenameChannels) {
+    return props.messages.channels.manageTripDescription
+  }
+
+  return props.isEditingChannel ? props.messages.channels.editDescription : props.messages.channels.createDescription
+})
 
 const getSortLabel = (value: TrackingChannelSortBy): string =>
   value === 'tracking_channel_id' ? props.messages.channels.sortChannelId : props.messages.channels.sortName
@@ -190,7 +208,7 @@ watch(
       <div class="panel-header modal-header">
         <div>
           <p class="section-kicker">{{ messages.channels.pageTitle }}</p>
-          <h3>{{ isEditingChannel ? messages.channels.editTitle : messages.channels.createTitle }}</h3>
+          <h3>{{ dialogTitle }}</h3>
         </div>
         <BaseButton class="dialog-close" :aria-label="messages.common.close" @click="handleCloseDialog">
           ×
@@ -198,11 +216,11 @@ watch(
       </div>
 
       <p class="muted-copy">
-        {{ isEditingChannel ? messages.channels.editDescription : messages.channels.createDescription }}
+        {{ dialogDescription }}
       </p>
 
       <form class="auth-form" @submit.prevent="handleSubmit">
-        <label class="field" for="channel-name">
+        <label v-if="canRenameChannels" class="field" for="channel-name">
           <span>{{ messages.channels.fieldName }}</span>
           <BaseInput
             id="channel-name"
@@ -230,7 +248,7 @@ watch(
           />
         </label>
 
-        <div v-if="isEditingChannel && selectedChannelForEdit" class="channel-detail-grid">
+        <div v-if="selectedChannelForEdit" class="channel-detail-grid">
           <div class="channel-detail-card">
             <span>{{ messages.channels.publicLinkLabel }}</span>
             <div class="channel-copy-row">
@@ -301,9 +319,9 @@ watch(
       </p>
 
       <div class="auth-actions modal-actions">
-        <BaseButton class="btn btn-secondary" :disabled="isDeletingChannel" @click="emit('closeDeleteDialog')">
-          {{ messages.common.cancel }}
-        </BaseButton>
+          <BaseButton class="btn btn-secondary" :disabled="isDeletingChannel" @click="emit('closeDeleteDialog')">
+            {{ messages.common.cancel }}
+          </BaseButton>
         <BaseButton class="btn btn-danger auth-submit" :disabled="isDeletingChannel" @click="emit('confirmDelete')">
           {{ isDeletingChannel ? messages.channels.deleting : messages.channels.confirmDelete }}
         </BaseButton>
@@ -317,7 +335,7 @@ watch(
             <p class="section-kicker">{{ messages.channels.pageTitle }}</p>
             <h3>{{ messages.channels.listTitle }}</h3>
           </div>
-          <BaseButton class="btn btn-primary" @click="emit('openCreateDialog')">
+          <BaseButton v-if="canCreateChannels" class="btn btn-primary" @click="emit('openCreateDialog')">
             {{ messages.channels.createAction }}
           </BaseButton>
         </div>
@@ -360,7 +378,7 @@ watch(
 
         <div v-if="!channels.length" class="employee-empty-state">
           <p class="muted-copy">{{ emptyStateMessage }}</p>
-          <BaseButton class="btn btn-secondary" @click="emit('openCreateDialog')">
+          <BaseButton v-if="canCreateChannels" class="btn btn-secondary" @click="emit('openCreateDialog')">
             {{ messages.channels.createAction }}
           </BaseButton>
         </div>
@@ -423,9 +441,13 @@ watch(
                 <td>
                   <div class="employee-actions">
                     <BaseButton class="btn btn-secondary employee-action-button" @click="emit('openEditDialog', channel)">
-                      {{ messages.channels.editAction }}
+                      {{ canRenameChannels ? messages.channels.editAction : messages.channels.manageTripAction }}
                     </BaseButton>
-                    <BaseButton class="btn btn-secondary employee-action-button" @click="emit('openDeleteDialog', channel)">
+                    <BaseButton
+                      v-if="canDeleteChannels"
+                      class="btn btn-secondary employee-action-button"
+                      @click="emit('openDeleteDialog', channel)"
+                    >
                       {{ messages.channels.deleteAction }}
                     </BaseButton>
                   </div>

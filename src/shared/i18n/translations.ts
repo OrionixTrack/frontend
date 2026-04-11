@@ -357,6 +357,9 @@ export interface TranslationDictionary {
     createDescription: string
     editTitle: string
     editDescription: string
+    manageTripAction: string
+    manageTripTitle: string
+    manageTripDescription: string
     saveChanges: string
     saving: string
     searchLabel: string
@@ -913,6 +916,9 @@ export const translations: Record<Locale, TranslationDictionary> = {
       createDescription: 'Save a public tracking channel with or without a linked trip.',
       editTitle: 'Edit channel',
       editDescription: 'Update the channel name or move it to another trip.',
+      manageTripAction: 'Manage trip',
+      manageTripTitle: 'Manage trip assignment',
+      manageTripDescription: 'Bind this tracking channel to a trip or remove the current trip assignment.',
       saveChanges: 'Save changes',
       saving: 'Saving...',
       searchLabel: 'Search',
@@ -1468,6 +1474,9 @@ export const translations: Record<Locale, TranslationDictionary> = {
       createDescription: 'Збережіть публічний канал відстеження з рейсом або без нього.',
       editTitle: 'Редагування каналу',
       editDescription: 'Оновіть назву каналу або переприв’яжіть його до іншого рейсу.',
+      manageTripAction: 'Керувати рейсом',
+      manageTripTitle: 'Керування прив’язкою рейсу',
+      manageTripDescription: 'Прив’яжіть до цього tracking channel рейс або зніміть поточну прив’язку.',
       saveChanges: 'Зберегти зміни',
       saving: 'Збереження...',
       searchLabel: 'Пошук',
