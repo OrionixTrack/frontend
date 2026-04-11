@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
-import BaseButton from '@shared/components/BaseButton.vue'
 import BaseCheckbox from '@shared/components/BaseCheckbox.vue'
 import BaseInput from '@shared/components/BaseInput.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
@@ -88,20 +87,14 @@ const parseCoordinate = (value: string): number | null => {
 
 const isStartResolved = computed(() => parseCoordinate(props.startLatitude) !== null && parseCoordinate(props.startLongitude) !== null)
 const isFinishResolved = computed(() => parseCoordinate(props.finishLatitude) !== null && parseCoordinate(props.finishLongitude) !== null)
-const isStartDirty = computed(() => draftAddress.start.trim() !== props.startAddress.trim())
-const isFinishDirty = computed(() => draftAddress.finish.trim() !== props.finishAddress.trim())
 const startBindingLabel = computed(() =>
   !isAddressSyncedWithMap.start
     ? ''
-    : isStartDirty.value
-    ? props.messages.dispatcherTrips.locationPendingChanges
     : '',
 )
 const finishBindingLabel = computed(() =>
   !isAddressSyncedWithMap.finish
     ? ''
-    : isFinishDirty.value
-    ? props.messages.dispatcherTrips.locationPendingChanges
     : '',
 )
 
@@ -167,6 +160,10 @@ const handleAddressInput = (point: RoutePoint, value: string): void => {
     return
   }
 
+  emit('updateField', point === 'start' ? 'startAddress' : 'finishAddress', value)
+  emit('updateField', point === 'start' ? 'startLatitude' : 'finishLatitude', '')
+  emit('updateField', point === 'start' ? 'startLongitude' : 'finishLongitude', '')
+
   const normalized = value.trim()
 
   if (normalized.length < 3) {
@@ -216,11 +213,6 @@ const applyTypedAddress = async (point: RoutePoint): Promise<void> => {
   } finally {
     isApplyingTypedAddress[point] = false
   }
-}
-
-const resetDraftAddress = (point: RoutePoint): void => {
-  draftAddress[point] = point === 'start' ? props.startAddress : props.finishAddress
-  clearSearchState(point)
 }
 
 const toggleAddressSync = (point: RoutePoint, value: boolean): void => {
@@ -340,13 +332,6 @@ onBeforeUnmount(() => {
         <span>{{ messages.trips.routeTitle }}</span>
         <strong>{{ messages.dispatcherTrips.locationPickerTitle }}</strong>
       </div>
-      <BaseButton
-        class="btn btn-secondary employee-action-button"
-        type="button"
-        @click="focusPoint(activePoint)"
-      >
-        {{ messages.dispatcherTrips.mapClickMode }}
-      </BaseButton>
     </div>
 
     <p class="muted-copy">{{ messages.dispatcherTrips.locationPickerDescription }}</p>
@@ -402,34 +387,12 @@ onBeforeUnmount(() => {
         />
 
         <div
-          v-if="draftAddress.start.trim() && isAddressSyncedWithMap.start && (isStartDirty || !isStartResolved)"
+          v-if="draftAddress.start.trim() && isAddressSyncedWithMap.start && !isStartResolved"
           class="trip-route-helper-row"
         >
           <p class="trip-route-helper">
-            {{ isStartDirty ? messages.dispatcherTrips.locationPendingChangesHint : messages.dispatcherTrips.locationNeedsConfirmation }}
+            {{ messages.dispatcherTrips.locationNeedsConfirmation }}
           </p>
-          <div class="trip-route-helper-actions">
-            <button
-              type="button"
-              class="trip-route-helper-action"
-              :disabled="isApplyingTypedAddress.start"
-              @click="applyTypedAddress('start')"
-            >
-              {{
-                isApplyingTypedAddress.start
-                  ? messages.common.loading
-                  : messages.dispatcherTrips.applyTypedAddress
-              }}
-            </button>
-            <button
-              v-if="isStartDirty"
-              type="button"
-              class="trip-route-helper-action trip-route-helper-action-secondary"
-              @click="resetDraftAddress('start')"
-            >
-              {{ messages.dispatcherTrips.resetTypedAddress }}
-            </button>
-          </div>
         </div>
 
       </section>
@@ -484,11 +447,11 @@ onBeforeUnmount(() => {
         />
 
         <div
-          v-if="draftAddress.finish.trim() && isAddressSyncedWithMap.finish && (isFinishDirty || !isFinishResolved)"
+          v-if="draftAddress.finish.trim() && isAddressSyncedWithMap.finish && !isFinishResolved"
           class="trip-route-helper-row"
         >
           <p class="trip-route-helper">
-            {{ isFinishDirty ? messages.dispatcherTrips.locationPendingChangesHint : messages.dispatcherTrips.locationNeedsConfirmation }}
+            {{ messages.dispatcherTrips.locationNeedsConfirmation }}
           </p>
           <div class="trip-route-helper-actions">
             <button
@@ -502,14 +465,6 @@ onBeforeUnmount(() => {
                   ? messages.common.loading
                   : messages.dispatcherTrips.applyTypedAddress
               }}
-            </button>
-            <button
-              v-if="isFinishDirty"
-              type="button"
-              class="trip-route-helper-action trip-route-helper-action-secondary"
-              @click="resetDraftAddress('finish')"
-            >
-              {{ messages.dispatcherTrips.resetTypedAddress }}
             </button>
           </div>
         </div>

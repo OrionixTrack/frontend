@@ -118,8 +118,15 @@ const normalizeChartPoints = (metric: 'temperature' | 'humidity' | 'speed'): Cha
         return null
       }
 
+      const formattedLabel = labelCandidate
+        ? new Intl.DateTimeFormat(props.locale === 'uk' ? 'uk-UA' : 'en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }).format(new Date(labelCandidate))
+        : String(index + 1)
+
       return {
-        label: labelCandidate ? labelCandidate.slice(11, 16) || labelCandidate : String(index + 1),
+        label: formattedLabel,
         value: numericCandidate,
       }
     })
@@ -230,6 +237,7 @@ const speedChart = computed(() => normalizeChartPoints('speed'))
                 :theme="theme"
                 :current-latitude="selectedTrip.currentTelemetry?.latitude"
                 :current-longitude="selectedTrip.currentTelemetry?.longitude"
+                :current-bearing="selectedTrip.currentTelemetry?.bearing"
                 :track-polyline="selectedTrip.trackPolyline"
               />
 
