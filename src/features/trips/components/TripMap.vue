@@ -130,7 +130,6 @@ const syncLayers = (): void => {
     startMarker.setLatLng(startLatLng)
   }
 
-  // Finish marker
   const finishLatLng = L.latLng(props.finishLatitude, props.finishLongitude)
   if (!finishMarker) {
     finishMarker = L.marker(finishLatLng, {
@@ -161,6 +160,25 @@ const syncLayers = (): void => {
     routeLine = null
   }
 
+  const routePoints = getRoutePoints()
+  if (routePoints) {
+    if (!routeLine) {
+      routeLine = L.polyline(routePoints, {
+        color: '#8ab4ff',
+        weight: 5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(map)
+    } else {
+      routeLine.setLatLngs(routePoints)
+    }
+  } else {
+    routeLine?.remove()
+    routeLine = null
+  }
+
+  // Current position marker
   if (
     props.currentLatitude !== null &&
     props.currentLatitude !== undefined &&
