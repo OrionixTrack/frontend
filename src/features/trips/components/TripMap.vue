@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
+import { createVehicleMarkerIcon } from '@shared/map/createVehicleMarkerIcon'
 
 const props = defineProps<{
   startLatitude: number
@@ -10,14 +11,19 @@ const props = defineProps<{
   theme: 'dark' | 'light'
   currentLatitude?: number | null
   currentLongitude?: number | null
+  currentBearing?: number | null
   trackPolyline?: unknown | null
 }>()
 
 const mapElement = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
-let layerGroup: L.LayerGroup | null = null
-let resizeObserver: ResizeObserver | null = null
 let tileLayer: L.TileLayer | null = null
+let resizeObserver: ResizeObserver | null = null
+
+let startMarker: L.Marker | null = null
+let finishMarker: L.Marker | null = null
+let currentMarker: L.Marker | null = null
+let routeLine: L.Polyline | null = null
 
 const getTileLayerConfig = (): { url: string; subdomains: string } =>
   props.theme === 'dark'
@@ -43,13 +49,14 @@ const syncTileLayer = (): void => {
   }).addTo(map)
 }
 
-const createMarkerIcon = (variant: 'start' | 'finish' | 'current', label: string): L.DivIcon =>
+const createMarkerIcon = (variant: 'start' | 'finish', label: string): L.DivIcon =>
   L.divIcon({
     className: 'trip-map-marker-shell',
     html: `<span class="trip-map-marker trip-map-marker-${variant}">${label}</span>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   })
+
 
 const decodePolyline = (encoded: string): Array<[number, number]> => {
   let index = 0
@@ -105,43 +112,54 @@ const getRoutePoints = (): Array<[number, number]> | null => {
   return null
 }
 
-const renderMap = (): void => {
+const syncLayers = (): void => {
   if (!map) {
     return
   }
 
-  layerGroup?.clearLayers()
-  layerGroup = L.layerGroup().addTo(map)
+  // Start marker
+  const startLatLng = L.latLng(props.startLatitude, props.startLongitude)
+  if (!startMarker) {
+    startMarker = L.marker(startLatLng, {
+      icon: createMarkerIcon('start', 'A'),
+      zIndexOffset: 300,
+    })
+      .bindTooltip('Start', { direction: 'top' })
+      .addTo(map)
+  } else {
+    startMarker.setLatLng(startLatLng)
+  }
+
+  // Finish marker
+  const finishLatLng = L.latLng(props.finishLatitude, props.finishLongitude)
+  if (!finishMarker) {
+    finishMarker = L.marker(finishLatLng, {
+      icon: createMarkerIcon('finish', 'B'),
+      zIndexOffset: 300,
+    })
+      .bindTooltip('Finish', { direction: 'top' })
+      .addTo(map)
+  } else {
+    finishMarker.setLatLng(finishLatLng)
+  }
 
   const routePoints = getRoutePoints()
-  const fallbackPoints: Array<[number, number]> = [
-    [props.startLatitude, props.startLongitude],
-    [props.finishLatitude, props.finishLongitude],
-  ]
-
-  const routeLine = routePoints
-    ? L.polyline(routePoints, {
+  if (routePoints) {
+    if (!routeLine) {
+      routeLine = L.polyline(routePoints, {
         color: '#8ab4ff',
         weight: 5,
         opacity: 0.9,
         lineCap: 'round',
         lineJoin: 'round',
-      }).addTo(layerGroup)
-    : null
-
-  L.marker([props.startLatitude, props.startLongitude], {
-    icon: createMarkerIcon('start', 'A'),
-    zIndexOffset: 300,
-  })
-    .bindTooltip('Start', { direction: 'top' })
-    .addTo(layerGroup)
-
-  L.marker([props.finishLatitude, props.finishLongitude], {
-    icon: createMarkerIcon('finish', 'B'),
-    zIndexOffset: 300,
-  })
-    .bindTooltip('Finish', { direction: 'top' })
-    .addTo(layerGroup)
+      }).addTo(map)
+    } else {
+      routeLine.setLatLngs(routePoints)
+    }
+  } else {
+    routeLine?.remove()
+    routeLine = null
+  }
 
   if (
     props.currentLatitude !== null &&
@@ -149,15 +167,40 @@ const renderMap = (): void => {
     props.currentLongitude !== null &&
     props.currentLongitude !== undefined
   ) {
-    L.marker([props.currentLatitude, props.currentLongitude], {
-      icon: createMarkerIcon('current', '●'),
-      zIndexOffset: 400,
-    })
-      .bindTooltip('Current', { direction: 'top' })
-      .addTo(layerGroup)
+    const currentLatLng = L.latLng(props.currentLatitude, props.currentLongitude)
+
+    if (!currentMarker) {
+      currentMarker = L.marker(currentLatLng, {
+        icon: createVehicleMarkerIcon(props.currentBearing),
+        zIndexOffset: 400,
+      })
+        .bindTooltip('Current', { direction: 'top' })
+        .addTo(map)
+    } else {
+      currentMarker.setLatLng(currentLatLng)
+      currentMarker.setIcon(createVehicleMarkerIcon(props.currentBearing))
+    }
+  } else {
+    currentMarker?.remove()
+    currentMarker = null
+  }
+}
+
+const fitBounds = (): void => {
+  if (!map) {
+    return
   }
 
-  const bounds = routeLine ? routeLine.getBounds() : L.latLngBounds(fallbackPoints)
+  const routePoints = getRoutePoints()
+  const fallbackPoints: Array<[number, number]> = [
+    [props.startLatitude, props.startLongitude],
+    [props.finishLatitude, props.finishLongitude],
+  ]
+
+  const bounds = routePoints
+    ? L.polyline(routePoints).getBounds()
+    : L.latLngBounds(fallbackPoints)
+
   fallbackPoints.forEach((point) => bounds.extend(point))
 
   if (
@@ -191,12 +234,13 @@ onMounted(() => {
   })
 
   syncTileLayer()
-
-  renderMap()
+  syncLayers()
+  fitBounds()
 
   void nextTick(() => {
     map?.invalidateSize()
-    renderMap()
+    syncLayers()
+    fitBounds()
   })
 
   resizeObserver = new ResizeObserver(() => {
@@ -205,11 +249,17 @@ onMounted(() => {
     }
 
     map.invalidateSize()
-    renderMap()
   })
 
   resizeObserver.observe(mapElement.value)
 })
+
+watch(
+  () => props.theme,
+  () => {
+    syncTileLayer()
+  },
+)
 
 watch(
   () => [
@@ -219,12 +269,11 @@ watch(
     props.finishLongitude,
     props.currentLatitude,
     props.currentLongitude,
+    props.currentBearing,
     props.trackPolyline,
-    props.theme,
   ] as const,
   () => {
-    syncTileLayer()
-    renderMap()
+    syncLayers()
   },
 )
 
@@ -233,8 +282,14 @@ onBeforeUnmount(() => {
   resizeObserver = null
   tileLayer?.remove()
   tileLayer = null
-  layerGroup?.clearLayers()
-  layerGroup = null
+  startMarker?.remove()
+  startMarker = null
+  finishMarker?.remove()
+  finishMarker = null
+  currentMarker?.remove()
+  currentMarker = null
+  routeLine?.remove()
+  routeLine = null
   map?.remove()
   map = null
 })

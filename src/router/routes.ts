@@ -213,6 +213,11 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/tracking/:token',
+    name: 'public-tracking',
+    component: () => import('@/views/PublicTrackingView.vue'),
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/views/NotFoundView.vue'),

@@ -203,11 +203,11 @@ const handleRouteFieldUpdate = (
 
           <p v-if="saveError" class="error-banner">{{ saveError }}</p>
 
-          <div class="auth-actions">
+          <div class="form-actions">
             <BaseButton class="btn btn-secondary" type="button" @click="emit('cancel')">
               {{ messages.common.cancel }}
             </BaseButton>
-            <BaseButton class="btn btn-primary auth-submit" type="submit" :disabled="isSaving">
+            <BaseButton class="btn btn-primary" type="submit" :disabled="isSaving">
               {{ isSaving ? messages.dispatcherTrips.saving : messages.dispatcherTrips.save }}
             </BaseButton>
           </div>

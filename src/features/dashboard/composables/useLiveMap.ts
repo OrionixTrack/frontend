@@ -189,7 +189,7 @@ export const useLiveMap = (
             latitude: payload.latitude,
             longitude: payload.longitude,
             speed: payload.speed ?? item.position?.speed ?? null,
-            bearing: item.position?.bearing ?? null,
+            bearing: payload.bearing ?? item.position?.bearing ?? null,
             datetime: payload.datetime,
           },
         }))

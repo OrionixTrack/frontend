@@ -487,7 +487,6 @@ export interface TranslationDictionary {
     editTitle: string
     editDescription: string
     openMapPicker: string
-    mapClickMode: string
     locationPickerTitle: string
     locationPickerDescription: string
     locationPickerHintStart: string
@@ -547,6 +546,26 @@ export interface TranslationDictionary {
     companySaved: string
     loadError: string
     saveError: string
+  }
+  publicTracking: {
+    title: string
+    channelLabel: string
+    tripLabel: string
+    destinationLabel: string
+    statusLabel: string
+    speedLabel: string
+    updatedAtLabel: string
+    statusPlanned: string
+    statusInProgress: string
+    statusCompleted: string
+    statusCancelled: string
+    loadingTitle: string
+    notFoundTitle: string
+    notFoundDescription: string
+    noTripTitle: string
+    noTripDescription: string
+    completedHint: string
+    cancelledHint: string
   }
   errors: {
     notFoundTitle: string
@@ -1046,7 +1065,6 @@ export const translations: Record<Locale, TranslationDictionary> = {
       editTitle: 'Edit trip',
       editDescription: 'Update the scheduled trip before it starts.',
       openMapPicker: 'Pick on map',
-      mapClickMode: 'Choose on map',
       locationPickerTitle: 'Route points',
       locationPickerDescription: 'Type an address to get suggestions or click directly on the map. The selected address and coordinates stay in sync automatically.',
       locationPickerHintStart: 'Click on the map to place the start point, then continue with the finish point.',
@@ -1106,6 +1124,26 @@ export const translations: Record<Locale, TranslationDictionary> = {
       companySaved: 'Company details updated.',
       loadError: 'Owner profile could not be loaded.',
       saveError: 'Changes could not be saved.',
+    },
+    publicTracking: {
+      title: 'Live tracking',
+      channelLabel: 'Channel',
+      tripLabel: 'Trip',
+      destinationLabel: 'Destination',
+      statusLabel: 'Status',
+      speedLabel: 'Speed',
+      updatedAtLabel: 'Last update',
+      statusPlanned: 'Planned',
+      statusInProgress: 'In progress',
+      statusCompleted: 'Completed',
+      statusCancelled: 'Cancelled',
+      loadingTitle: 'Loading...',
+      notFoundTitle: 'Link not found',
+      notFoundDescription: 'This tracking link is invalid or no longer available.',
+      noTripTitle: 'No active trip',
+      noTripDescription: 'No trip has been assigned to this tracking channel yet.',
+      completedHint: 'This trip has been completed.',
+      cancelledHint: 'This trip has been cancelled.',
     },
     errors: {
       notFoundTitle: '404',
@@ -1604,7 +1642,6 @@ export const translations: Record<Locale, TranslationDictionary> = {
       editTitle: 'Редагування рейсу',
       editDescription: 'Оновіть запланований рейс до його старту.',
       openMapPicker: 'Вибрати на мапі',
-      mapClickMode: 'Обрати на мапі',
       locationPickerTitle: 'Точки маршруту',
       locationPickerDescription: 'Вводьте адресу з підказками або клікайте прямо на мапі. Адреса і координати синхронізуються автоматично.',
       locationPickerHintStart: 'Клікніть на мапі, щоб поставити точку старту, після цього зручно перейти до фінішу.',
@@ -1664,6 +1701,26 @@ export const translations: Record<Locale, TranslationDictionary> = {
       companySaved: 'Дані компанії оновлено.',
       loadError: 'Не вдалося завантажити профіль власника.',
       saveError: 'Не вдалося зберегти зміни.',
+    },
+    publicTracking: {
+      title: 'Відстеження',
+      channelLabel: 'Канал',
+      tripLabel: 'Рейс',
+      destinationLabel: 'Пункт призначення',
+      statusLabel: 'Статус',
+      speedLabel: 'Швидкість',
+      updatedAtLabel: 'Останнє оновлення',
+      statusPlanned: 'Заплановано',
+      statusInProgress: 'У дорозі',
+      statusCompleted: 'Завершено',
+      statusCancelled: 'Скасовано',
+      loadingTitle: 'Завантаження...',
+      notFoundTitle: 'Посилання не знайдено',
+      notFoundDescription: 'Це посилання для відстеження недійсне або більше не доступне.',
+      noTripTitle: 'Рейс не призначено',
+      noTripDescription: 'До цього каналу відстеження ще не прив\'язано жодного рейсу.',
+      completedHint: 'Цей рейс завершено.',
+      cancelledHint: 'Цей рейс скасовано.',
     },
     errors: {
       notFoundTitle: '404',

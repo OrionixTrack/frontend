@@ -1,44 +1,42 @@
-import { computed, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {computed, reactive, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 
-import { ApiError, getSafeErrorMessage } from '@core/api'
-import { useSessionStore } from '@core/stores/session'
+import {ApiError, getSafeErrorMessage} from '@core/api'
+import {useSessionStore} from '@core/stores/session'
 import {
-  cancelDispatcherTrip,
-  createDispatcherTrip,
-  endDispatcherTrip,
-  getDispatcherTrip,
-  getDispatcherTrips,
-  getDispatcherTripStats,
-  startDispatcherTrip,
-  updateDispatcherTrip,
-  type DispatcherTripPayload,
+    cancelDispatcherTrip,
+    createDispatcherTrip,
+    type DispatcherTripPayload,
+    endDispatcherTrip,
+    getDispatcherTrip,
+    getDispatcherTrips,
+    getDispatcherTripStats,
+    startDispatcherTrip,
+    updateDispatcherTrip,
 } from '@features/dispatcher-trips/api/dispatcher-trips.api'
-import { getEmployees } from '@features/employees/api/employees.api'
-import type { EmployeeItem } from '@features/employees/types/EmployeeItem'
-import { patchTripInCollection, patchTripStatus, patchTripTelemetry } from '@features/trips/live/trips.live'
-import { useApiState } from '@shared/composables/useApiState'
-import { useI18n } from '@shared/composables/useI18n'
-import { useTheme } from '@shared/composables/useTheme'
+import {getEmployees} from '@features/employees/api/employees.api'
+import type {EmployeeItem} from '@features/employees/types/EmployeeItem'
+import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '@features/trips/live/trips.live'
+import {useApiState} from '@shared/composables/useApiState'
+import {useI18n} from '@shared/composables/useI18n'
+import {useTheme} from '@shared/composables/useTheme'
 import {
-  connectTrackingSocket,
-  onTelemetryUpdate,
-  onTripStatus,
-  subscribeTrip,
-  unsubscribeTrip,
+    connectTrackingSocket,
+    onTelemetryUpdate,
+    onTripStatus,
+    subscribeTrip,
+    unsubscribeTrip,
 } from '@shared/realtime/tracking.socket'
-import type { DispatcherUser } from '@shared/types'
-import { getVehicles } from '@features/vehicles/api/vehicles.api'
-import type { VehicleItem } from '@features/vehicles/types/VehicleItem'
+import type {DispatcherUser} from '@shared/types'
+import {getVehicles} from '@features/vehicles/api/vehicles.api'
+import type {VehicleItem} from '@features/vehicles/types/VehicleItem'
 
-import type {
-  OwnerTripItem,
-} from '@features/trips/types/OwnerTripItem'
-import type { OwnerTripListParams } from '@features/trips/types/OwnerTripListParams'
-import type { OwnerTripSortBy } from '@features/trips/types/OwnerTripSortBy'
-import type { OwnerTripSortOrder } from '@features/trips/types/OwnerTripSortOrder'
-import type { OwnerTripStats } from '@features/trips/types/OwnerTripStats'
-import type { OwnerTripStatus } from '@features/trips/types/OwnerTripStatus'
+import type {OwnerTripItem,} from '@features/trips/types/OwnerTripItem'
+import type {OwnerTripListParams} from '@features/trips/types/OwnerTripListParams'
+import type {OwnerTripSortBy} from '@features/trips/types/OwnerTripSortBy'
+import type {OwnerTripSortOrder} from '@features/trips/types/OwnerTripSortOrder'
+import type {OwnerTripStats} from '@features/trips/types/OwnerTripStats'
+import type {OwnerTripStatus} from '@features/trips/types/OwnerTripStatus'
 
 const DEFAULT_LIMIT = 20
 const DEFAULT_DIRECTORY_LIMIT = 20
@@ -386,11 +384,10 @@ export const useDispatcherTripsView = () => {
 
   const loadTripStats = async (tripId: number, signal?: AbortSignal): Promise<void> => {
     try {
-      const stats = await executeStats(
-        () => getDispatcherTripStats(tripId, signal),
-        (error) => getSafeErrorMessage(error, messages.value.trips.statsLoadError),
+        selectedTripStats.value = await executeStats(
+          () => getDispatcherTripStats(tripId, signal),
+          (error) => getSafeErrorMessage(error, messages.value.trips.statsLoadError),
       )
-      selectedTripStats.value = stats
       statsLoadedForTripId.value = tripId
     } catch {
       selectedTripStats.value = null
@@ -618,7 +615,6 @@ export const useDispatcherTripsView = () => {
   }
 
   const buildPayload = (): DispatcherTripPayload => ({
-    // Validation runs before submit, so coordinate casts are safe here.
     name: form.name.trim(),
     description: form.description.trim() || null,
     plannedStart: toIsoDateTime(form.plannedStart),

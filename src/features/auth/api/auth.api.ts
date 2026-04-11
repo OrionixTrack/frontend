@@ -109,9 +109,7 @@ export const resendVerificationRequest = async (
     if (typeof errorPayload.retryAfter === 'number') {
       retryAfter = errorPayload.retryAfter
     }
-  } catch {
-    // Keep default message and retryAfter fallback.
-  }
+  } catch {}
 
   if (response.status === 429) {
     throw new ResendVerificationRateLimitError(message, retryAfter)
