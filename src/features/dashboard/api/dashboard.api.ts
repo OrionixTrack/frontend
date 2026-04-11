@@ -1,6 +1,6 @@
 import { getJson } from '@core/api'
 import type { DispatcherUser, DriverUser, OwnerUser } from '@shared/types'
-import type { OwnerLiveMapResponse, OwnerStatsResponse, TripResponse } from '@features/dashboard/types'
+import type { LiveMapResponse, OwnerStatsResponse, TripResponse } from '@features/dashboard/types'
 
 export const getOwnerProfile = (signal?: AbortSignal): Promise<OwnerUser> =>
   getJson<OwnerUser>('/owner/profile', { signal })
@@ -8,8 +8,8 @@ export const getOwnerProfile = (signal?: AbortSignal): Promise<OwnerUser> =>
 export const getOwnerStats = (signal?: AbortSignal): Promise<OwnerStatsResponse> =>
   getJson<OwnerStatsResponse>('/owner/stats', { signal })
 
-export const getOwnerMapVehicles = (signal?: AbortSignal): Promise<OwnerLiveMapResponse> =>
-  getJson<OwnerLiveMapResponse>('/map/vehicles', { signal })
+export const getOwnerMapVehicles = (signal?: AbortSignal): Promise<LiveMapResponse> =>
+  getJson<LiveMapResponse>('/map/vehicles', { signal })
 
 export const getDispatcherProfile = (signal?: AbortSignal): Promise<DispatcherUser> =>
   getJson<DispatcherUser>('/dispatcher/profile', { signal })

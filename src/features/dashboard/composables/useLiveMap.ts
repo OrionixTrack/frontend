@@ -12,10 +12,10 @@ import {
   unsubscribeCompany,
 } from '@shared/realtime/tracking.socket'
 import type { TranslationDictionary } from '@shared/i18n/translations'
-import type { OwnerUser, SessionState } from '@shared/types'
+import type { DispatcherUser, OwnerUser, SessionState } from '@shared/types'
 
 import type { MapVehicleItem } from '../types/MapVehicleItem'
-import type { OwnerLiveMapState } from '@features/dashboard/types'
+import type { LiveMapState } from '@features/dashboard/types'
 
 type VehiclesById = Record<number, MapVehicleItem>
 type TripToVehicleMap = Record<number, number>
@@ -32,17 +32,17 @@ const sortVehicles = (items: MapVehicleItem[]): MapVehicleItem[] =>
     return left.vehicleName.localeCompare(right.vehicleName)
   })
 
-export const useOwnerLiveMap = (
+export const useLiveMap = (
   session: Readonly<SessionState>,
   messages: () => TranslationDictionary,
-  activeProfile: () => OwnerUser | null,
+  activeProfile: () => OwnerUser | DispatcherUser | null,
 ): {
-  ownerLiveMap: Readonly<OwnerLiveMapState>
-  resetOwnerLiveMap: () => void
-  reloadOwnerLiveMap: () => Promise<void>
+  liveMap: Readonly<LiveMapState>
+  resetLiveMap: () => void
+  reloadLiveMap: () => Promise<void>
 } => {
   const { isLoading, error, resetError, execute } = useApiState('')
-  const state = reactive<OwnerLiveMapState>({
+  const state = reactive<LiveMapState>({
     isLoading: false,
     error: '',
     items: [],
@@ -105,8 +105,8 @@ export const useOwnerLiveMap = (
     removeTelemetryListener = null
   }
 
-  const reloadOwnerLiveMap = async (): Promise<void> => {
-    if (!session.accessToken || session.role !== 'owner') {
+  const reloadLiveMap = async (): Promise<void> => {
+    if (!session.accessToken || (session.role !== 'owner' && session.role !== 'dispatcher')) {
       return
     }
 
@@ -124,7 +124,7 @@ export const useOwnerLiveMap = (
     }
   }
 
-  const resetOwnerLiveMap = (): void => {
+  const resetLiveMap = (): void => {
     resetError()
     vehiclesById = {}
     tripToVehicleMap = {}
@@ -141,8 +141,8 @@ export const useOwnerLiveMap = (
       const controller = new AbortController()
       onCleanup(() => controller.abort())
 
-      if (!token || role !== 'owner') {
-        resetOwnerLiveMap()
+      if (!token || (role !== 'owner' && role !== 'dispatcher')) {
+        resetLiveMap()
         return
       }
 
@@ -167,7 +167,7 @@ export const useOwnerLiveMap = (
     ([token, role, companyId], _previous, onCleanup) => {
       detachListeners()
 
-      if (!token || role !== 'owner' || !companyId) {
+      if (!token || (role !== 'owner' && role !== 'dispatcher') || !companyId) {
         disconnectTrackingSocket()
         return
       }
@@ -179,7 +179,7 @@ export const useOwnerLiveMap = (
         const vehicleId = tripToVehicleMap[payload.tripId]
 
         if (!vehicleId) {
-          void reloadOwnerLiveMap()
+          void reloadLiveMap()
           return
         }
 
@@ -199,7 +199,7 @@ export const useOwnerLiveMap = (
         const vehicleId = tripToVehicleMap[payload.tripId]
 
         if (!vehicleId) {
-          void reloadOwnerLiveMap()
+          void reloadLiveMap()
           return
         }
 
@@ -214,7 +214,7 @@ export const useOwnerLiveMap = (
         }))
 
         if (payload.status === 'completed' || payload.status === 'cancelled') {
-          void reloadOwnerLiveMap()
+          void reloadLiveMap()
         }
       })
 
@@ -232,8 +232,8 @@ export const useOwnerLiveMap = (
   })
 
   return {
-    ownerLiveMap: readonly(state) as Readonly<OwnerLiveMapState>,
-    resetOwnerLiveMap,
-    reloadOwnerLiveMap,
+    liveMap: readonly(state) as Readonly<LiveMapState>,
+    resetLiveMap,
+    reloadLiveMap,
   }
 }

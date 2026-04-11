@@ -4,7 +4,7 @@ import { DashboardScreen, useDashboardView } from '@features/dashboard'
 const {
   session,
   dashboardState,
-  ownerLiveMap,
+  liveMap,
   activeProfile,
   locale,
   messages,
@@ -18,7 +18,7 @@ const {
   <DashboardScreen
     :session="session"
     :dashboard-state="dashboardState"
-    :owner-live-map="ownerLiveMap"
+    :live-map="liveMap"
     :active-profile="activeProfile"
     :locale="locale"
     :messages="messages"

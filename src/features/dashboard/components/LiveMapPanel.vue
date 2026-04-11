@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { OwnerLiveMapState } from '@features/dashboard/types'
+import type { LiveMapState } from '@features/dashboard/types'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
 
-import OwnerLiveMapCanvas from './OwnerLiveMapCanvas.vue'
+import LiveMapCanvas from './LiveMapCanvas.vue'
 
 const props = defineProps<{
-  liveMapState: Readonly<OwnerLiveMapState>
+  liveMapState: Readonly<LiveMapState>
   locale: Locale
   messages: TranslationDictionary
   theme: AppTheme
@@ -36,7 +36,7 @@ const hasPositions = computed(() => props.liveMapState.items.some((item) => item
         <div v-else-if="!hasPositions" class="trip-detail-empty owner-live-map-empty">
           <p class="muted-copy">{{ messages.dashboard.liveMapEmpty }}</p>
         </div>
-        <OwnerLiveMapCanvas
+        <LiveMapCanvas
           v-else
           :items="liveMapState.items"
           :locale="locale"

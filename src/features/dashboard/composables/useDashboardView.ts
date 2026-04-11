@@ -2,7 +2,7 @@ import { useRouter } from 'vue-router'
 
 import { useSessionStore } from '@core/stores/session'
 import { useDashboard } from '@features/dashboard/composables/useDashboard'
-import { useOwnerLiveMap } from '@features/dashboard/composables/useOwnerLiveMap'
+import { useLiveMap } from '@features/dashboard/composables/useLiveMap'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
 
@@ -16,15 +16,18 @@ export const useDashboardView = () => {
     () => messages.value,
     updateUser,
   )
-  const { ownerLiveMap, resetOwnerLiveMap } = useOwnerLiveMap(
+  const { liveMap, resetLiveMap } = useLiveMap(
     session,
     () => messages.value,
-    () => (activeProfile.value && 'full_name' in activeProfile.value ? activeProfile.value : null),
+    () =>
+      activeProfile.value && ('full_name' in activeProfile.value || 'surname' in activeProfile.value)
+        ? activeProfile.value
+        : null,
   )
 
   const handleLogout = async (): Promise<void> => {
     resetDashboardState()
-    resetOwnerLiveMap()
+    resetLiveMap()
     logout()
     await router.replace({ name: 'login' })
   }
@@ -32,7 +35,7 @@ export const useDashboardView = () => {
   return {
     session,
     dashboardState,
-    ownerLiveMap,
+    liveMap,
     activeProfile,
     locale,
     messages,

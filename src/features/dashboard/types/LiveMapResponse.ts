@@ -1,5 +1,5 @@
 import type { MapVehicleItem } from './MapVehicleItem'
 
-export interface OwnerLiveMapResponse {
+export interface LiveMapResponse {
   vehicles: MapVehicleItem[]
 }

@@ -2,13 +2,13 @@
 import { computed } from 'vue'
 
 import type { DashboardState } from '@features/dashboard/types'
-import type { OwnerLiveMapState } from '@features/dashboard/types'
+import type { LiveMapState } from '@features/dashboard/types'
 import {
   getRoleLabel,
   getTripStatusLabel,
   getUserDisplayName,
 } from '@features/dashboard/presenters'
-import OwnerLiveMapPanel from './OwnerLiveMapPanel.vue'
+import LiveMapPanel from './LiveMapPanel.vue'
 import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
@@ -17,7 +17,7 @@ import type { SessionState } from '@shared/types'
 const props = defineProps<{
   session: Readonly<SessionState>
   dashboardState: Readonly<DashboardState>
-  ownerLiveMap: Readonly<OwnerLiveMapState>
+  liveMap: Readonly<LiveMapState>
   activeProfile: SessionState['user']
   locale: Locale
   messages: TranslationDictionary
@@ -57,50 +57,33 @@ const ownerStats = computed(() => (props.session.role === 'owner' ? props.dashbo
     @update-theme="emit('updateTheme', $event)"
   >
       <section class="dashboard-grid">
-        <article class="dashboard-hero panel" :class="{ 'dashboard-hero-owner': session.role === 'owner' }">
-          <template v-if="session.role === 'owner'">
-            <div class="dashboard-hero-top">
-              <div class="dashboard-hero-copy">
-                <p class="section-kicker">{{ messages.common.overview }}</p>
-                <h3>{{ activeProfile?.company?.name || messages.common.noValue }}</h3>
-              </div>
-            </div>
-
-            <div class="dashboard-overview-stats">
-              <div
-                v-for="stat in ownerStats"
-                :key="stat.label"
-                class="info-list-item hero-meta-card hero-meta-stat"
-              >
-                <span>{{ stat.label }}</span>
-                <strong>{{ stat.value }}</strong>
-              </div>
-            </div>
-          </template>
-
-          <template v-else>
+        <article v-if="session.role === 'owner'" class="dashboard-hero panel dashboard-hero-owner">
+          <div class="dashboard-hero-top">
             <div class="dashboard-hero-copy">
               <p class="section-kicker">{{ messages.common.overview }}</p>
-              <h3>{{ userDisplayName }}</h3>
-              <p class="hero-text">{{ activeProfile?.company?.name || messages.common.noValue }}</p>
+              <h3>{{ activeProfile?.company?.name || messages.common.noValue }}</h3>
             </div>
+          </div>
 
-            <div class="info-list info-list-cards">
-              <div class="info-list-item hero-meta-card">
-                <span>{{ messages.common.company }}</span>
-                <strong>{{ activeProfile?.company?.name || messages.common.noValue }}</strong>
-              </div>
+          <div class="dashboard-overview-stats">
+            <div
+              v-for="stat in ownerStats"
+              :key="stat.label"
+              class="info-list-item hero-meta-card hero-meta-stat"
+            >
+              <span>{{ stat.label }}</span>
+              <strong>{{ stat.value }}</strong>
             </div>
-          </template>
+          </div>
         </article>
 
-        <article v-if="leadMetric && session.role !== 'owner'" class="dashboard-feature panel">
+        <article v-if="leadMetric && session.role === 'driver'" class="dashboard-feature panel">
           <span>{{ leadMetric.label }}</span>
           <strong>{{ leadMetric.value }}</strong>
           <p>{{ messages.common.availableNow }}</p>
         </article>
 
-        <template v-if="session.role !== 'owner'">
+        <template v-if="session.role === 'driver'">
           <article
             v-for="stat in supportingMetrics"
             :key="stat.label"
@@ -112,10 +95,7 @@ const ownerStats = computed(() => (props.session.role === 'owner' ? props.dashbo
           </article>
         </template>
 
-        <article
-          v-if="session.role === 'dispatcher' || session.role === 'driver'"
-          class="panel panel-trips"
-        >
+        <article v-if="session.role === 'driver'" class="panel panel-trips">
           <div class="panel-header">
             <div>
               <p class="section-kicker">{{ messages.dashboard.roleViewTitle }}</p>
@@ -141,9 +121,9 @@ const ownerStats = computed(() => (props.session.role === 'owner' ? props.dashbo
           </div>
         </article>
 
-        <OwnerLiveMapPanel
-          v-if="session.role === 'owner'"
-          :live-map-state="ownerLiveMap"
+        <LiveMapPanel
+          v-if="session.role === 'owner' || session.role === 'dispatcher'"
+          :live-map-state="liveMap"
           :locale="locale"
           :messages="messages"
           :theme="theme"

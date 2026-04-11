@@ -1,6 +1,6 @@
 import type { MapVehicleItem } from './MapVehicleItem'
 
-export interface OwnerLiveMapState {
+export interface LiveMapState {
   isLoading: boolean
   error: string
   items: MapVehicleItem[]
