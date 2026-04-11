@@ -87,6 +87,51 @@ export const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/dispatcher/profile',
+    name: 'dispatcher-profile',
+    component: () => import('@/views/DispatcherProfileView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
+    path: '/dispatcher/trips',
+    name: 'dispatcher-trips',
+    component: () => import('@/views/DispatcherTripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
+    path: '/dispatcher/trips/new',
+    name: 'dispatcher-trip-create',
+    component: () => import('@/views/DispatcherTripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
+    path: '/dispatcher/trips/:tripId',
+    name: 'dispatcher-trip-details',
+    component: () => import('@/views/DispatcherTripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
+    path: '/dispatcher/trips/:tripId/edit',
+    name: 'dispatcher-trip-edit',
+    component: () => import('@/views/DispatcherTripsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['dispatcher'],
+    },
+  },
+  {
     path: '/owner/settings',
     name: 'owner-settings',
     component: () => import('@/views/OwnerSettingsView.vue'),

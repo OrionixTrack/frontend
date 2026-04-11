@@ -88,6 +88,7 @@ export interface TranslationDictionary {
     name: string
     email: string
     overview: string
+    actions: string
     availableNow: string
     noValue: string
   }
@@ -464,6 +465,71 @@ export interface TranslationDictionary {
     avgLabel: string
     noStats: string
   }
+  dispatcherProfile: {
+    pageTitle: string
+    title: string
+    name: string
+    surname: string
+    save: string
+    saving: string
+    loadError: string
+    saveError: string
+    saveSuccess: string
+  }
+  dispatcherTrips: {
+    createAction: string
+    createTitle: string
+    createDescription: string
+    editAction: string
+    editTitle: string
+    editDescription: string
+    openMapPicker: string
+    mapClickMode: string
+    locationPickerTitle: string
+    locationPickerDescription: string
+    locationPickerHintStart: string
+    locationPickerHintFinish: string
+    locationMissing: string
+    locationRequired: string
+    startAddressPlaceholder: string
+    finishAddressPlaceholder: string
+    reverseGeocodingLoading: string
+    locationNeedsConfirmation: string
+    applyTypedAddress: string
+    locationLinked: string
+    locationNotLinked: string
+    locationPendingChanges: string
+    locationPendingChangesHint: string
+    resetTypedAddress: string
+    syncWithMapLabel: string
+    startLatitude: string
+    startLongitude: string
+    finishLatitude: string
+    finishLongitude: string
+    driverField: string
+    vehicleField: string
+    searchDriverPlaceholder: string
+    searchVehiclePlaceholder: string
+    unassignedDriver: string
+    unassignedVehicle: string
+    startAction: string
+    endAction: string
+    cancelAction: string
+    confirmStartTitle: string
+    confirmStartDescription: string
+    confirmEndTitle: string
+    confirmEndDescription: string
+    confirmCancelTitle: string
+    confirmCancelDescription: string
+    startBlockedTitle: string
+    startRequiresDriver: string
+    startRequiresVehicle: string
+    startRequiresDriverAndVehicle: string
+    save: string
+    saving: string
+    saveError: string
+    actionError: string
+  }
   ownerSettings: {
     pageTitle: string
     profileTitle: string
@@ -575,6 +641,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       name: 'Name',
       email: 'Email',
       overview: 'Overview',
+      actions: 'Actions',
       availableNow: 'Available now',
       noValue: 'Not available',
     },
@@ -906,7 +973,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       statusCompleted: 'Completed',
       statusCancelled: 'Cancelled',
       sortPlannedStart: 'Planned start',
-      sortTripId: 'Trip ID',
+      sortTripId: 'ID',
       sortStatus: 'Status',
       ascending: 'Ascending',
       descending: 'Descending',
@@ -953,6 +1020,71 @@ export const translations: Record<Locale, TranslationDictionary> = {
       maxLabel: 'Max',
       avgLabel: 'Avg',
       noStats: 'No trip statistics available yet.',
+    },
+    dispatcherProfile: {
+      pageTitle: 'Dispatcher profile',
+      title: 'Profile details',
+      name: 'First name',
+      surname: 'Last name',
+      save: 'Save changes',
+      saving: 'Saving...',
+      loadError: 'Dispatcher profile could not be loaded.',
+      saveError: 'Dispatcher profile could not be saved.',
+      saveSuccess: 'Profile updated successfully',
+    },
+    dispatcherTrips: {
+      createAction: 'Create trip',
+      createTitle: 'Create trip',
+      createDescription: 'Plan a new trip with route points, contact details, and schedule.',
+      editAction: 'Edit trip',
+      editTitle: 'Edit trip',
+      editDescription: 'Update the scheduled trip before it starts.',
+      openMapPicker: 'Pick on map',
+      mapClickMode: 'Choose on map',
+      locationPickerTitle: 'Route points',
+      locationPickerDescription: 'Type an address to get suggestions or click directly on the map. The selected address and coordinates stay in sync automatically.',
+      locationPickerHintStart: 'Click on the map to place the start point, then continue with the finish point.',
+      locationPickerHintFinish: 'Click on the map to place the finish point. You can also drag either marker to adjust it.',
+      locationMissing: 'Select on map',
+      locationRequired: 'Select both start and finish points on the map.',
+      startAddressPlaceholder: 'Enter start address',
+      finishAddressPlaceholder: 'Enter finish address',
+      reverseGeocodingLoading: 'Looking up address...',
+      locationNeedsConfirmation: 'Confirm this point by choosing a suggestion or clicking on the map.',
+      applyTypedAddress: 'Apply address',
+      locationLinked: 'Linked to map',
+      locationNotLinked: 'Not linked to map',
+      locationPendingChanges: 'Address edited',
+      locationPendingChangesHint: 'The map is still linked to the previous point. Apply the new address or reset the edit.',
+      resetTypedAddress: 'Reset',
+      syncWithMapLabel: 'Sync with map',
+      startLatitude: 'Start latitude',
+      startLongitude: 'Start longitude',
+      finishLatitude: 'Finish latitude',
+      finishLongitude: 'Finish longitude',
+      driverField: 'Driver',
+      vehicleField: 'Vehicle',
+      searchDriverPlaceholder: 'Search drivers by name',
+      searchVehiclePlaceholder: 'Search vehicles by name or plate',
+      unassignedDriver: 'No driver',
+      unassignedVehicle: 'No vehicle',
+      startAction: 'Start trip',
+      endAction: 'End trip',
+      cancelAction: 'Cancel trip',
+      confirmStartTitle: 'Start this trip?',
+      confirmStartDescription: 'The trip will move to in-progress status and live tracking can begin.',
+      confirmEndTitle: 'End this trip?',
+      confirmEndDescription: 'The trip will be marked as completed.',
+      confirmCancelTitle: 'Cancel this trip?',
+      confirmCancelDescription: 'The trip will be cancelled. This action changes the trip status immediately.',
+      startBlockedTitle: 'Unable to start trip',
+      startRequiresDriver: 'Assign a driver before starting the trip.',
+      startRequiresVehicle: 'Assign a vehicle before starting the trip.',
+      startRequiresDriverAndVehicle: 'Assign both a driver and a vehicle before starting the trip.',
+      save: 'Save trip',
+      saving: 'Saving...',
+      saveError: 'Trip changes could not be saved.',
+      actionError: 'Trip action could not be completed.',
     },
     ownerSettings: {
       pageTitle: 'Company settings',
@@ -1063,6 +1195,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       name: "Ім'я",
       email: 'Email',
       overview: 'Огляд',
+      actions: 'Дії',
       availableNow: 'Доступно зараз',
       noValue: 'Недоступно',
     },
@@ -1442,6 +1575,71 @@ export const translations: Record<Locale, TranslationDictionary> = {
       maxLabel: 'Макс',
       avgLabel: 'Сер',
       noStats: 'Статистика рейсу поки недоступна.',
+    },
+    dispatcherProfile: {
+      pageTitle: 'Профіль диспетчера',
+      title: 'Дані профілю',
+      name: "Ім'я",
+      surname: 'Прізвище',
+      save: 'Зберегти зміни',
+      saving: 'Збереження...',
+      loadError: 'Не вдалося завантажити профіль диспетчера.',
+      saveError: 'Не вдалося зберегти профіль диспетчера.',
+      saveSuccess: 'Профіль успішно оновлено.',
+    },
+    dispatcherTrips: {
+      createAction: 'Створити рейс',
+      createTitle: 'Створення рейсу',
+      createDescription: 'Заплануйте новий рейс із маршрутом, контактами та часом старту.',
+      editAction: 'Редагування рейсу',
+      editTitle: 'Редагування рейсу',
+      editDescription: 'Оновіть запланований рейс до його старту.',
+      openMapPicker: 'Вибрати на мапі',
+      mapClickMode: 'Обрати на мапі',
+      locationPickerTitle: 'Точки маршруту',
+      locationPickerDescription: 'Вводьте адресу з підказками або клікайте прямо на мапі. Адреса і координати синхронізуються автоматично.',
+      locationPickerHintStart: 'Клікніть на мапі, щоб поставити точку старту, після цього зручно перейти до фінішу.',
+      locationPickerHintFinish: 'Клікніть на мапі, щоб поставити точку фінішу. За потреби перетягніть будь-який маркер.',
+      locationMissing: 'Оберіть на мапі',
+      locationRequired: 'Оберіть на мапі і старт, і фініш рейсу.',
+      startAddressPlaceholder: 'Введіть адресу старту',
+      finishAddressPlaceholder: 'Введіть адресу фінішу',
+      reverseGeocodingLoading: 'Визначаємо адресу...',
+      locationNeedsConfirmation: 'Підтвердьте цю точку: виберіть підказку або клікніть на мапі.',
+      applyTypedAddress: 'Застосувати адресу',
+      locationLinked: 'Привʼязано до мапи',
+      locationNotLinked: 'Не привʼязано до мапи',
+      locationPendingChanges: 'Адресу змінено',
+      locationPendingChangesHint: 'Мапа ще привʼязана до попередньої точки. Застосуйте нову адресу або скиньте редагування.',
+      resetTypedAddress: 'Скинути',
+      syncWithMapLabel: 'Синхронізувати з мапою',
+      startLatitude: 'Широта старту',
+      startLongitude: 'Довгота старту',
+      finishLatitude: 'Широта фінішу',
+      finishLongitude: 'Довгота фінішу',
+      driverField: 'Водій',
+      vehicleField: 'Транспорт',
+      searchDriverPlaceholder: 'Пошук водіїв за ім’ям',
+      searchVehiclePlaceholder: 'Пошук транспорту за назвою або номером',
+      unassignedDriver: 'Без водія',
+      unassignedVehicle: 'Без транспорту',
+      startAction: 'Запустити рейс',
+      endAction: 'Завершити рейс',
+      cancelAction: 'Скасувати рейс',
+      confirmStartTitle: 'Запустити цей рейс?',
+      confirmStartDescription: 'Рейс перейде у статус in progress, і можна буде починати live tracking.',
+      confirmEndTitle: 'Завершити цей рейс?',
+      confirmEndDescription: 'Рейс буде позначений як завершений.',
+      confirmCancelTitle: 'Скасувати цей рейс?',
+      confirmCancelDescription: 'Рейс буде скасовано. Статус зміниться одразу після підтвердження.',
+      startBlockedTitle: 'Не вдалося запустити рейс',
+      startRequiresDriver: 'Перед запуском рейсу потрібно призначити водія.',
+      startRequiresVehicle: 'Перед запуском рейсу потрібно призначити транспорт.',
+      startRequiresDriverAndVehicle: 'Перед запуском рейсу потрібно призначити і водія, і транспорт.',
+      save: 'Зберегти рейс',
+      saving: 'Збереження...',
+      saveError: 'Не вдалося зберегти зміни рейсу.',
+      actionError: 'Не вдалося виконати дію з рейсом.',
     },
     ownerSettings: {
       pageTitle: 'Налаштування компанії',

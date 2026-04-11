@@ -8,11 +8,14 @@ import type { VehicleListParams } from '../types/VehicleListParams'
 import type { VehiclePayload } from '../types/VehiclePayload'
 import type { TrackerTokenResponse } from '@features/trackers/types/TrackerTokenResponse'
 
+export type VehicleApiScope = 'owner' | 'dispatcher'
+
 export const getVehicles = (
   params: VehicleListParams,
   signal?: AbortSignal,
+  scope: VehicleApiScope = 'owner',
 ): Promise<VehicleItem[]> =>
-  getJson<VehicleItem[]>('/owner/vehicles', {
+  getJson<VehicleItem[]>(scope === 'dispatcher' ? '/dispatcher/vehicles' : '/owner/vehicles', {
     query: params,
     signal,
   })

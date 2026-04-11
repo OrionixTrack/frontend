@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue'
 
 import BaseButton from '@shared/components/BaseButton.vue'
 import BaseInput from '@shared/components/BaseInput.vue'
 import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
-import type { OwnerUser, SessionState } from '@shared/types'
+import type { SessionState } from '@shared/types'
 
 import type { OwnerTripItem } from '../types/OwnerTripItem'
 import type { OwnerTripSortBy } from '../types/OwnerTripSortBy'
@@ -15,7 +15,7 @@ import type { OwnerTripStatus } from '../types/OwnerTripStatus'
 
 const props = defineProps<{
   session: Readonly<SessionState>
-  activeProfile: OwnerUser | null
+  activeProfile: SessionState['user']
   locale: Locale
   messages: TranslationDictionary
   theme: AppTheme
@@ -33,7 +33,11 @@ const props = defineProps<{
   isInitialLoading: boolean
   hasNextPage: boolean
   isLoadingMore: boolean
+  actionLabel?: string
+  rowActionsLabel?: string
 }>()
+
+const slots = useSlots()
 
 const emit = defineEmits<{
   logout: []
@@ -46,6 +50,7 @@ const emit = defineEmits<{
   updateDateTo: [value: string]
   openTripDetails: [tripId: number]
   loadMore: []
+  openAction: []
 }>()
 
 const loadMoreTrigger = ref<HTMLElement | null>(null)
@@ -65,6 +70,7 @@ const emptyStateMessage = computed(() =>
     ? props.messages.trips.emptySearch
     : props.messages.trips.empty,
 )
+const hasRowActions = computed(() => Boolean(slots['row-actions']))
 
 const getSortLabel = (value: OwnerTripSortBy): string => {
   switch (value) {
@@ -191,6 +197,13 @@ watch([loadMoreTrigger, () => props.hasNextPage, () => props.isLoading], connect
             <p class="section-kicker">{{ messages.trips.pageTitle }}</p>
             <h3>{{ messages.trips.listTitle }}</h3>
           </div>
+          <BaseButton
+            v-if="actionLabel"
+            class="btn btn-primary employee-action-button"
+            @click="emit('openAction')"
+          >
+            {{ actionLabel }}
+          </BaseButton>
         </div>
 
         <p class="muted-copy page-description">{{ messages.trips.description }}</p>
@@ -272,6 +285,7 @@ watch([loadMoreTrigger, () => props.hasNextPage, () => props.isLoading], connect
                 <th>{{ messages.trips.driverLabel }}</th>
                 <th>{{ messages.trips.vehicleLabel }}</th>
                 <th>{{ messages.trips.dispatcherLabel }}</th>
+                <th v-if="hasRowActions">{{ rowActionsLabel || messages.common.actions }}</th>
               </tr>
             </thead>
             <tbody>
@@ -300,6 +314,11 @@ watch([loadMoreTrigger, () => props.hasNextPage, () => props.isLoading], connect
                 <td>{{ formatPerson(trip.driver) }}</td>
                 <td class="trip-vehicle-cell">{{ formatVehicle(trip.vehicle) }}</td>
                 <td>{{ formatPerson(trip.createdByDispatcher) }}</td>
+                <td v-if="hasRowActions" class="trip-actions-cell" @click.stop>
+                  <div class="table-row-actions">
+                    <slot name="row-actions" :trip="trip" />
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>

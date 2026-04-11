@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 
 import BaseButton from '@shared/components/BaseButton.vue'
 import WorkspaceShell from '@shared/components/WorkspaceShell.vue'
 import type { AppTheme } from '@shared/composables/useTheme'
 import type { Locale, TranslationDictionary } from '@shared/i18n/translations'
-import type { OwnerUser, SessionState } from '@shared/types'
+import type { SessionState } from '@shared/types'
 
 import TripMetricChart from './TripMetricChart.vue'
 import TripMap from './TripMap.vue'
@@ -14,7 +14,7 @@ import type { OwnerTripStats } from '../types/OwnerTripStats'
 
 const props = defineProps<{
   session: Readonly<SessionState>
-  activeProfile: OwnerUser | null
+  activeProfile: SessionState['user']
   locale: Locale
   messages: TranslationDictionary
   theme: AppTheme
@@ -33,6 +33,8 @@ const emit = defineEmits<{
   closeTripDetails: []
   updateDetailTab: [value: 'overview' | 'stats']
 }>()
+const slots = useSlots()
+const hasHeaderActions = computed(() => Boolean(slots['header-actions']))
 
 interface ChartPoint {
   label: string
@@ -164,9 +166,16 @@ const speedChart = computed(() => normalizeChartPoints('speed'))
             <p class="section-kicker">{{ messages.trips.detailTitle }}</p>
             <h3>{{ selectedTrip?.name || messages.trips.noTripSelected }}</h3>
           </div>
-          <BaseButton class="btn btn-secondary employee-action-button" @click="emit('closeTripDetails')">
-            {{ messages.trips.closeDetails }}
-          </BaseButton>
+          <div class="panel-header-actions">
+            <div v-if="hasHeaderActions && selectedTrip" class="trip-header-actions-group">
+              <slot name="header-actions" :trip="selectedTrip" />
+            </div>
+            <div class="trip-header-nav-group">
+              <BaseButton class="btn btn-secondary employee-action-button trip-back-button" @click="emit('closeTripDetails')">
+                {{ messages.trips.closeDetails }}
+              </BaseButton>
+            </div>
+          </div>
         </div>
 
         <p v-if="detailError" class="error-banner">{{ detailError }}</p>

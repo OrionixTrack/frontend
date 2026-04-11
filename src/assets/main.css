@@ -221,7 +221,9 @@
   font-weight: 800;
 }
 
+.base-input,
 .field input {
+  width: 100%;
   min-height: 52px;
   padding: 0 16px;
   border: 1px solid var(--border);
@@ -229,10 +231,21 @@
   background: var(--surface-strong);
   color: var(--text);
   outline: none;
+  font: inherit;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 }
 
+.base-input::placeholder {
+  color: var(--text-muted);
+}
+
+.base-input:focus,
 .field input:focus {
-  border-color: var(--border-strong);
+  border-color: rgba(138, 180, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(138, 180, 255, 0.12);
 }
 
 .field select {
@@ -846,7 +859,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -900,6 +913,59 @@
 .modal-actions {
   grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
   gap: 12px;
+}
+
+.status-validation-header {
+  margin-bottom: 4px;
+}
+
+.status-validation-kicker {
+  color: var(--danger);
+}
+
+.status-validation-banner {
+  display: grid;
+  gap: 10px;
+  margin-top: -2px;
+  padding: 16px 18px;
+  border-color: rgba(255, 107, 107, 0.32);
+  background:
+    linear-gradient(135deg, rgba(255, 107, 107, 0.18), rgba(255, 107, 107, 0.08)),
+    var(--surface-strong);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.08);
+}
+
+.status-validation-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.14);
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-validation-message {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.status-validation-actions {
+  display: flex;
+  justify-content: flex-end;
+  grid-template-columns: none;
+}
+
+.status-validation-actions .btn {
+  width: auto;
+  min-width: 160px;
 }
 
 .dialog-close {
@@ -996,6 +1062,13 @@
   background: var(--surface-strong);
 }
 
+.trip-map .leaflet-pane,
+.trip-map .leaflet-top,
+.trip-map .leaflet-bottom,
+.trip-map .leaflet-control {
+  z-index: 1;
+}
+
 .trip-map-marker-shell {
   background: transparent;
   border: 0;
@@ -1027,6 +1100,214 @@
 .trip-map-marker-current {
   background: linear-gradient(135deg, #38bdf8, #2563eb);
   font-size: 1rem;
+}
+
+.trip-map-marker-active {
+  box-shadow:
+    0 0 0 4px rgba(138, 180, 255, 0.18),
+    0 12px 24px rgba(8, 17, 32, 0.28);
+}
+
+.trip-location-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+}
+
+.trip-location-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trip-location-grid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-location-point {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.trip-location-point:hover,
+.trip-location-point.active {
+  border-color: rgba(138, 180, 255, 0.42);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.trip-location-point span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.trip-location-point strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.trip-location-point small {
+  color: var(--text-muted);
+}
+
+.trip-location-picker-map {
+  min-height: 420px;
+}
+
+.trip-route-planner {
+  gap: 18px;
+}
+
+.trip-route-inputs,
+.trip-route-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trip-route-point-card,
+.trip-route-summary-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
+.trip-route-point-card {
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.trip-route-point-card:hover,
+.trip-route-point-card.active {
+  border-color: rgba(138, 180, 255, 0.42);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.trip-route-point-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trip-route-point-head span,
+.trip-route-summary-card span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.trip-route-point-head small,
+.trip-route-summary-card small {
+  color: var(--text-muted);
+}
+
+.trip-route-autocomplete {
+  position: relative;
+}
+
+.trip-route-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 14;
+  display: grid;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.trip-route-dropdown-state {
+  padding: 10px 12px;
+  color: var(--text-muted);
+}
+
+.trip-route-suggestion {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+}
+
+.trip-route-suggestion:hover {
+  background: var(--surface-strong);
+}
+
+
+.trip-route-suggestion strong,
+.trip-route-summary-card strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.trip-route-helper {
+  margin: 0;
+  color: var(--warning);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.trip-route-helper-row {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.trip-route-helper-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-self: start;
+}
+
+.trip-route-helper-action {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.trip-route-helper-action-secondary {
+  background: transparent;
+  color: var(--text-muted);
 }
 
 .invitations-list {
@@ -1143,6 +1424,18 @@
 .trip-table-row:focus-visible td {
   background: rgba(138, 180, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(138, 180, 255, 0.26), inset 0 -1px 0 rgba(138, 180, 255, 0.26);
+}
+
+.trip-actions-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.table-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .table-email {
@@ -1429,6 +1722,57 @@
 .employee-action-button {
   min-height: 38px;
   padding: 0 14px;
+}
+
+.panel-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.trip-header-actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trip-header-nav-group {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  margin-left: 2px;
+  border-left: 1px solid var(--border);
+}
+
+.trip-back-button {
+  opacity: 0.88;
+}
+
+.base-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.base-textarea:focus {
+  outline: none;
+  border-color: rgba(138, 180, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(138, 180, 255, 0.12);
+}
+
+.base-textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .channel-primary-cell,
@@ -1852,7 +2196,11 @@
   .trip-card-grid,
   .trip-info-grid,
   .trip-metric-grid,
-  .trip-route-points {
+  .trip-route-points,
+  .trip-location-grid,
+  .trip-location-grid-compact,
+  .trip-route-inputs,
+  .trip-route-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2019,6 +2367,10 @@
 
   .modal-actions {
     grid-template-columns: 1fr;
+  }
+
+  .status-validation-actions .btn {
+    width: 100%;
   }
 
   .endpoint-row {

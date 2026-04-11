@@ -14,5 +14,10 @@ const handleInput = (event: Event): void => {
 </script>
 
 <template>
-  <input :value="modelValue" :placeholder="placeholder" @input="handleInput">
+  <input
+    class="base-input"
+    :value="modelValue"
+    :placeholder="placeholder"
+    @input="handleInput"
+  >
 </template>

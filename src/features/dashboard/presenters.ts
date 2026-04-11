@@ -124,7 +124,8 @@ export const getRoleNavigation = (
             { id: 'overview', label: t.common.overview, routeName: 'dashboard' },
             ...(role === 'dispatcher'
               ? [
-                  { id: 'trips', label: t.dashboard.dispatcherTrips, routeName: null },
+                  { id: 'profile', label: t.common.profile, routeName: 'dispatcher-profile' },
+                  { id: 'trips', label: t.dashboard.dispatcherTrips, routeName: 'dispatcher-trips' },
                   { id: 'assignments', label: t.dashboard.dispatcherAssignments, routeName: null },
                   { id: 'channels', label: t.dashboard.dispatcherChannels, routeName: null },
                   { id: 'map', label: t.dashboard.dispatcherMap, routeName: null },

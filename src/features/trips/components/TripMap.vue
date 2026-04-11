@@ -89,7 +89,7 @@ const decodePolyline = (encoded: string): Array<[number, number]> => {
   return coordinates
 }
 
-const getRoutePoints = (): Array<[number, number]> => {
+const getRoutePoints = (): Array<[number, number]> | null => {
   if (typeof props.trackPolyline === 'string' && props.trackPolyline.trim()) {
     try {
       const decoded = decodePolyline(props.trackPolyline)
@@ -98,17 +98,11 @@ const getRoutePoints = (): Array<[number, number]> => {
         return decoded
       }
     } catch {
-      return [
-        [props.startLatitude, props.startLongitude],
-        [props.finishLatitude, props.finishLongitude],
-      ]
+      return null
     }
   }
 
-  return [
-    [props.startLatitude, props.startLongitude],
-    [props.finishLatitude, props.finishLongitude],
-  ]
+  return null
 }
 
 const renderMap = (): void => {
@@ -125,13 +119,15 @@ const renderMap = (): void => {
     [props.finishLatitude, props.finishLongitude],
   ]
 
-  const routeLine = L.polyline(routePoints, {
-    color: '#8ab4ff',
-    weight: 5,
-    opacity: 0.9,
-    lineCap: 'round',
-    lineJoin: 'round',
-  }).addTo(layerGroup)
+  const routeLine = routePoints
+    ? L.polyline(routePoints, {
+        color: '#8ab4ff',
+        weight: 5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(layerGroup)
+    : null
 
   L.marker([props.startLatitude, props.startLongitude], {
     icon: createMarkerIcon('start', 'A'),
@@ -161,7 +157,7 @@ const renderMap = (): void => {
       .addTo(layerGroup)
   }
 
-  const bounds = routeLine.getBounds()
+  const bounds = routeLine ? routeLine.getBounds() : L.latLngBounds(fallbackPoints)
   fallbackPoints.forEach((point) => bounds.extend(point))
 
   if (
