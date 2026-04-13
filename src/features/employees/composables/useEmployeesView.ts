@@ -1,46 +1,36 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getSafeErrorMessage, isApiError } from '@core/api/errors'
+import { createStatusRule, getSafeErrorMessage, mapApiErrorMessage } from '@core/api'
 import { useSessionStore } from '@core/stores/session'
 import { deleteEmployee, getEmployees, updateEmployee } from '@features/employees/api/employees.api'
 import type { EmployeeItem } from '@features/employees/types/EmployeeItem'
 import type { EmployeeSortBy } from '@features/employees/types/EmployeeSortBy'
 import type { EmployeeSortOrder } from '@features/employees/types/EmployeeSortOrder'
 import type { EmployeeType } from '@features/employees/types/EmployeeType'
+import {
+  applyPaginatedItems,
+  createPaginatedDirectoryState,
+  type PaginatedDirectoryState,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
 import type { OwnerUser } from '@shared/types'
 
 const DEFAULT_LIMIT = 20
+type EmployeeFilters = ReturnType<typeof createEmployeeFilters>
+type EmployeeDirectoryState = PaginatedDirectoryState<EmployeeItem, EmployeeFilters>
 
-interface EmployeeDirectoryState {
-  items: EmployeeItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: EmployeeSortBy
-    sortOrder: EmployeeSortOrder
-  }
-}
-
-const createDirectoryState = (): EmployeeDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'register_date',
-    sortOrder: 'DESC',
-  },
+const createEmployeeFilters = () => ({
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  search: '',
+  sortBy: 'register_date' as EmployeeSortBy,
+  sortOrder: 'DESC' as EmployeeSortOrder,
 })
 
 export const useEmployeesView = () => {
@@ -66,10 +56,10 @@ export const useEmployeesView = () => {
   const isRemoveDialogOpen = ref(false)
   const selectedEmployeeForEdit = ref<EmployeeItem | null>(null)
   const selectedEmployeeForRemove = ref<EmployeeItem | null>(null)
-  const directories = reactive<Record<EmployeeType, EmployeeDirectoryState>>({
-    driver: createDirectoryState(),
-    dispatcher: createDirectoryState(),
-  })
+  const directories = reactive({
+    driver: createPaginatedDirectoryState<EmployeeItem, EmployeeFilters>(createEmployeeFilters),
+    dispatcher: createPaginatedDirectoryState<EmployeeItem, EmployeeFilters>(createEmployeeFilters),
+  }) as Record<EmployeeType, EmployeeDirectoryState>
 
   const employeeTypes: EmployeeType[] = ['driver', 'dispatcher']
   const currentDirectory = computed(() => directories[selectedEmployeeType.value])
@@ -82,8 +72,6 @@ export const useEmployeesView = () => {
       ? messages.value.employees.driversTab
       : messages.value.employees.dispatchersTab,
   )
-  let isSyncingRouteQuery = false
-
   const normalizeEmployeeType = (value: unknown): EmployeeType =>
     value === 'dispatcher' ? 'dispatcher' : 'driver'
 
@@ -106,17 +94,36 @@ export const useEmployeesView = () => {
     const nextType = normalizeEmployeeType(route.query.type)
     const nextDirectory = directories[nextType]
 
-    isSyncingRouteQuery = true
     selectedEmployeeType.value = nextType
     nextDirectory.filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     nextDirectory.filters.sortBy = normalizeSortBy(route.query.sortBy)
     nextDirectory.filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
     nextDirectory.filters.offset = 0
     nextDirectory.appliedSearch = nextDirectory.filters.search.trim()
-    isSyncingRouteQuery = false
   }
 
-  applyQueryState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState: applyQueryState,
+    buildRouteQuery: () => ({
+      ...route.query,
+      type: selectedEmployeeType.value === 'driver' ? undefined : selectedEmployeeType.value,
+      search: currentDirectory.value.filters.search.trim() || undefined,
+      sortBy: currentDirectory.value.filters.sortBy === 'register_date'
+        ? undefined
+        : currentDirectory.value.filters.sortBy,
+      sortOrder: currentDirectory.value.filters.sortOrder === 'DESC'
+        ? undefined
+        : currentDirectory.value.filters.sortOrder,
+    }),
+    watchSources: () => [
+      selectedEmployeeType.value,
+      currentDirectory.value.filters.search,
+      currentDirectory.value.filters.sortBy,
+      currentDirectory.value.filters.sortOrder,
+    ] as const,
+  })
 
   const resetFeedback = (): void => {
     saveSuccess.value = ''
@@ -143,13 +150,7 @@ export const useEmployeesView = () => {
         (error) => getSafeErrorMessage(error, messages.value.employees.loadError),
       )
 
-      const normalizedItems = Array.isArray(employeeItems) ? employeeItems : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(employeeItems) ? employeeItems : [])
     } catch {
       return
     }
@@ -168,8 +169,8 @@ export const useEmployeesView = () => {
       ] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
-        directories.driver = createDirectoryState()
-        directories.dispatcher = createDirectoryState()
+        resetPaginatedDirectory(directories.driver, createEmployeeFilters)
+        resetPaginatedDirectory(directories.dispatcher, createEmployeeFilters)
         return
       }
 
@@ -180,55 +181,11 @@ export const useEmployeesView = () => {
     { immediate: true },
   )
 
-  watch(
-    () => [selectedEmployeeType.value, currentDirectory.value.filters.search] as const,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        currentDirectory.value.filters.offset = 0
-        currentDirectory.value.appliedSearch = currentDirectory.value.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
-    },
-  )
-
-  watch(
-    () => route.query,
+  useDebouncedSearch(
+    () => currentDirectory.value.filters.search,
     () => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      applyQueryState()
-    },
-  )
-
-  watch(
-    () =>
-      [
-        selectedEmployeeType.value,
-        currentDirectory.value.filters.search,
-        currentDirectory.value.filters.sortBy,
-        currentDirectory.value.filters.sortOrder,
-      ] as const,
-    async ([type, search, sortBy, sortOrder]) => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      isSyncingRouteQuery = true
-
-      await router.replace({
-        query: {
-          ...route.query,
-          type: type === 'driver' ? undefined : type,
-          search: search.trim() || undefined,
-          sortBy: sortBy === 'register_date' ? undefined : sortBy,
-          sortOrder: sortOrder === 'DESC' ? undefined : sortOrder,
-        },
-      })
-
-      isSyncingRouteQuery = false
+      currentDirectory.value.filters.offset = 0
+      currentDirectory.value.appliedSearch = currentDirectory.value.filters.search.trim()
     },
   )
 
@@ -310,13 +267,14 @@ export const useEmployeesView = () => {
     try {
       await executeRemove(
         () => deleteEmployee(selectedEmployeeType.value, employeeId),
-        (error) => {
-          if (selectedEmployeeType.value === 'driver' && isApiError(error) && error.status === 409) {
-            return messages.value.employees.driverRemoveConflict
-          }
-
-          return getSafeErrorMessage(error, messages.value.employees.removeError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.employees.removeError, [
+            createStatusRule(
+              409,
+              messages.value.employees.driverRemoveConflict,
+              () => selectedEmployeeType.value === 'driver',
+            ),
+          ]),
       )
 
       currentDirectory.value.items = currentDirectory.value.items.filter((employee) => employee.id !== employeeId)

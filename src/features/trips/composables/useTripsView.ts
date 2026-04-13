@@ -1,10 +1,17 @@
-import {computed, onBeforeUnmount, reactive, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import {getSafeErrorMessage} from '@core/api'
-import {useSessionStore} from '@core/stores/session'
-import {useApiState} from '@shared/composables/useApiState'
-import {useI18n} from '@shared/composables/useI18n'
+import { getSafeErrorMessage } from '@core/api'
+import { useSessionStore } from '@core/stores/session'
+import {
+  applyPaginatedItems,
+  createPaginatedDirectoryState,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
+import { useApiState } from '@shared/composables/useApiState'
+import { useI18n } from '@shared/composables/useI18n'
 import {
   connectTrackingSocket,
   disconnectTrackingSocket,
@@ -15,8 +22,8 @@ import {
   unsubscribeCompany,
   unsubscribeTrip,
 } from '@shared/realtime/tracking.socket'
-import {useTheme} from '@shared/composables/useTheme'
-import type {OwnerUser} from '@shared/types'
+import { useTheme } from '@shared/composables/useTheme'
+import type { OwnerUser } from '@shared/types'
 
 import {getOwnerTrip, getOwnerTrips, getOwnerTripStats} from '../api/trips.api'
 import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '../live/trips.live'
@@ -27,39 +34,15 @@ import type {OwnerTripStats} from '../types/OwnerTripStats'
 import type {OwnerTripStatus} from '../types/OwnerTripStatus'
 
 const DEFAULT_LIMIT = 20
-
-interface TripDirectoryState {
-  items: OwnerTripItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: OwnerTripSortBy
-    sortOrder: OwnerTripSortOrder
-    status: OwnerTripStatus | ''
-    dateFrom: string
-    dateTo: string
-  }
-}
-
-const createDirectoryState = (): TripDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'planned_start_datetime',
-    sortOrder: 'DESC',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
-  },
+const createTripFilters = () => ({
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  search: '',
+  sortBy: 'planned_start_datetime' as OwnerTripSortBy,
+  sortOrder: 'DESC' as OwnerTripSortOrder,
+  status: '' as OwnerTripStatus | '',
+  dateFrom: '',
+  dateTo: '',
 })
 
 const toStartOfDay = (value: string): string =>
@@ -94,12 +77,11 @@ export const useTripsView = () => {
   } = useApiState('')
 
   const activeProfile = ref<OwnerUser | null>((session.user as OwnerUser | null) ?? null)
-  const directory = reactive<TripDirectoryState>(createDirectoryState())
+  const directory = reactive(createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripFilters>>(createTripFilters))
   const selectedTrip = ref<OwnerTripItem | null>(null)
   const selectedTripStats = ref<OwnerTripStats | null>(null)
   const detailTab = ref<'overview' | 'stats'>('overview')
   const statsLoadedForTripId = ref<number | null>(null)
-  let isSyncingRouteState = false
   let removeTripStatusListener: (() => void) | null = null
   let removeTelemetryListener: (() => void) | null = null
 
@@ -142,7 +124,6 @@ export const useTripsView = () => {
   }
 
   const applyRouteState = (): void => {
-    isSyncingRouteState = true
     directory.filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     directory.filters.sortBy = normalizeSortBy(route.query.sortBy)
     directory.filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
@@ -152,10 +133,32 @@ export const useTripsView = () => {
     directory.filters.offset = 0
     directory.appliedSearch = directory.filters.search.trim()
     detailTab.value = route.query.tab === 'stats' ? 'stats' : 'overview'
-    isSyncingRouteState = false
   }
 
-  applyRouteState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState,
+    buildRouteQuery: () => ({
+      search: directory.filters.search.trim() || undefined,
+      sortBy: directory.filters.sortBy === 'planned_start_datetime' ? undefined : directory.filters.sortBy,
+      sortOrder: directory.filters.sortOrder === 'DESC' ? undefined : directory.filters.sortOrder,
+      status: directory.filters.status || undefined,
+      dateFrom: directory.filters.dateFrom || undefined,
+      dateTo: directory.filters.dateTo || undefined,
+      tab: selectedTripId.value && detailTab.value === 'stats' ? 'stats' : undefined,
+    }),
+    watchSources: () => [
+      directory.filters.search,
+      directory.filters.sortBy,
+      directory.filters.sortOrder,
+      directory.filters.status,
+      directory.filters.dateFrom,
+      directory.filters.dateTo,
+      detailTab.value,
+      selectedTripId.value,
+    ] as const,
+  })
 
   const patchDirectoryTrip = (tripId: number, patcher: (trip: OwnerTripItem) => OwnerTripItem): void => {
     directory.items = patchTripInCollection(directory.items, tripId, patcher)
@@ -227,13 +230,7 @@ export const useTripsView = () => {
         (error) => getSafeErrorMessage(error, messages.value.trips.loadError),
       )
 
-      const normalizedItems = Array.isArray(trips) ? trips : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(trips) ? trips : [])
     } catch {
       return
     }
@@ -278,7 +275,7 @@ export const useTripsView = () => {
       ] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
-        Object.assign(directory, createDirectoryState())
+        resetPaginatedDirectory(directory, createTripFilters)
         selectedTrip.value = null
         selectedTripStats.value = null
         return
@@ -291,15 +288,11 @@ export const useTripsView = () => {
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => directory.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        directory.filters.offset = 0
-        directory.appliedSearch = directory.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      directory.filters.offset = 0
+      directory.appliedSearch = directory.filters.search.trim()
     },
   )
 
@@ -316,54 +309,6 @@ export const useTripsView = () => {
       attachLiveListeners(token)
     },
     { immediate: true },
-  )
-
-  watch(
-    () => route.query,
-    () => {
-      if (isSyncingRouteState) {
-        return
-      }
-
-      applyRouteState()
-    },
-  )
-
-  watch(
-    () =>
-      [
-        directory.filters.search,
-        directory.filters.sortBy,
-        directory.filters.sortOrder,
-        directory.filters.status,
-        directory.filters.dateFrom,
-        directory.filters.dateTo,
-        detailTab.value,
-        selectedTripId.value,
-      ] as const,
-    async ([search, sortBy, sortOrder, status, dateFrom, dateTo, tab, tripId]) => {
-      if (isSyncingRouteState) {
-        return
-      }
-
-      isSyncingRouteState = true
-
-      await router.replace({
-        name: tripId ? 'owner-trip-details' : 'owner-trips',
-        params: tripId ? { tripId } : undefined,
-        query: {
-          search: search.trim() || undefined,
-          sortBy: sortBy === 'planned_start_datetime' ? undefined : sortBy,
-          sortOrder: sortOrder === 'DESC' ? undefined : sortOrder,
-          status: status || undefined,
-          dateFrom: dateFrom || undefined,
-          dateTo: dateTo || undefined,
-          tab: tripId && tab === 'stats' ? 'stats' : undefined,
-        },
-      })
-
-      isSyncingRouteState = false
-    },
   )
 
   watch(

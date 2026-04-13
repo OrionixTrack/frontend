@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError, createNetworkUnavailableError, createRequestTimeoutError, getRequestFailedMessage, postJson } from '@core/api'
+import { ApiError, postJson } from '@core/api'
 import type {
   AcceptInvitationPayload,
   DispatcherAuthResponse,
@@ -65,57 +65,52 @@ export const resendVerificationRequest = async (
   payload: ResendVerificationPayload,
   signal?: AbortSignal,
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+  await postJson<void>('/auth/resend-verification', payload, {
+    auth: false,
     signal,
+    mapErrorResponse: ({
+      response,
+      payload: errorPayload,
+    }: {
+      response: Response
+      payload: {
+        message?: string | string[]
+        error?: string
+        retryAfter?: number
+      } | null
+    }) => {
+      if (response.status !== 429) {
+        return null
+      }
+
+      const message = (() => {
+        if (Array.isArray(errorPayload?.message)) {
+          return errorPayload.message.join(', ')
+        }
+
+        if (typeof errorPayload?.message === 'string') {
+          return errorPayload.message
+        }
+
+        if (typeof errorPayload?.error === 'string') {
+          return errorPayload.error
+        }
+
+        return 'Too many requests'
+      })()
+
+      return new ResendVerificationRateLimitError(
+        message,
+        typeof errorPayload?.retryAfter === 'number' ? errorPayload.retryAfter : 60,
+      )
+    },
   }).catch((error: unknown) => {
-    if (signal?.aborted) {
+    if (error instanceof ResendVerificationRateLimitError || error instanceof ApiError) {
       throw error
     }
 
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw createRequestTimeoutError()
-    }
-
-    throw createNetworkUnavailableError()
+    throw error
   })
-
-  if (response.ok) {
-    return
-  }
-
-  let message = getRequestFailedMessage()
-  let retryAfter = 60
-
-  try {
-    const errorPayload = (await response.json()) as {
-      message?: string | string[]
-      error?: string
-      retryAfter?: number
-    }
-
-    if (Array.isArray(errorPayload.message)) {
-      message = errorPayload.message.join(', ')
-    } else if (typeof errorPayload.message === 'string') {
-      message = errorPayload.message
-    } else if (typeof errorPayload.error === 'string') {
-      message = errorPayload.error
-    }
-
-    if (typeof errorPayload.retryAfter === 'number') {
-      retryAfter = errorPayload.retryAfter
-    }
-  } catch {}
-
-  if (response.status === 429) {
-    throw new ResendVerificationRateLimitError(message, retryAfter)
-  }
-
-  throw new ApiError(message, response.status)
 }
 
 export const requestPasswordReset = async (

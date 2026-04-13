@@ -1,18 +1,37 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getSafeErrorMessage, isApiError } from '@core/api/errors'
+import {
+  createStatusRule,
+  getSafeErrorMessage,
+  hasApiErrorMessage,
+  mapApiErrorMessage,
+} from '@core/api'
 import { useSessionStore } from '@core/stores/session'
 import { createInvitation, getInvitations } from '@features/invitations/api/invitations.api'
 import type { InvitationItem } from '@features/invitations/types/InvitationItem'
 import type { InvitationRole } from '@features/invitations/types/InvitationRole'
 import type { InvitationSortOrder } from '@features/invitations/types/InvitationSortOrder'
+import {
+  createPaginatedDirectoryState,
+  applyPaginatedItems,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
 import type { OwnerUser } from '@shared/types'
 
 const DEFAULT_INVITATIONS_LIMIT = 30
+
+const createInvitationFilters = () => ({
+  limit: DEFAULT_INVITATIONS_LIMIT,
+  offset: 0,
+  search: '',
+  sortOrder: 'DESC' as InvitationSortOrder,
+})
 
 export const useInvitationsView = () => {
   const route = useRoute()
@@ -26,35 +45,37 @@ export const useInvitationsView = () => {
   const invitations = ref<InvitationItem[]>([])
   const createSuccess = ref('')
   const isInviteDialogOpen = ref(false)
-  const appliedSearch = ref('')
   const form = reactive({
     email: '',
     role: 'driver' as InvitationRole,
   })
-  const filters = reactive({
-    limit: DEFAULT_INVITATIONS_LIMIT,
-    offset: 0,
-    search: '',
-    sortOrder: 'DESC' as InvitationSortOrder,
-  })
-  const hasMoreInvitations = ref(true)
-  const isInitialLoading = computed(() => isLoading.value && invitations.value.length === 0)
-  const isLoadingMore = computed(() => isLoading.value && invitations.value.length > 0)
-  let isSyncingRouteQuery = false
+  const directory = reactive(createPaginatedDirectoryState<InvitationItem, ReturnType<typeof createInvitationFilters>>(createInvitationFilters))
+  const filters = directory.filters
+  const hasMoreInvitations = computed(() => directory.hasNextPage)
+  const isInitialLoading = computed(() => isLoading.value && !directory.hasLoaded)
+  const isLoadingMore = computed(() => isLoading.value && directory.hasLoaded && directory.filters.offset > 0)
 
   const normalizeSortOrder = (value: unknown): InvitationSortOrder =>
     value === 'ASC' ? 'ASC' : 'DESC'
 
   const applyQueryState = (): void => {
-    isSyncingRouteQuery = true
     filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
     filters.offset = 0
-    appliedSearch.value = filters.search.trim()
-    isSyncingRouteQuery = false
+    directory.appliedSearch = filters.search.trim()
   }
 
-  applyQueryState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState: applyQueryState,
+    buildRouteQuery: () => ({
+      ...route.query,
+      search: filters.search.trim() || undefined,
+      sortOrder: filters.sortOrder === 'DESC' ? undefined : filters.sortOrder,
+    }),
+    watchSources: () => [filters.search, filters.sortOrder] as const,
+  })
 
   const resetCreateFeedback = (): void => {
     createSuccess.value = ''
@@ -70,30 +91,27 @@ export const useInvitationsView = () => {
               limit: filters.limit,
               offset: filters.offset,
               sortOrder: filters.sortOrder,
-              search: appliedSearch.value,
+              search: directory.appliedSearch,
             },
             signal,
           ),
         (error) => getSafeErrorMessage(error, messages.value.invitations.loadError),
       )
 
-      const normalizedItems = Array.isArray(items) ? items : []
-      invitations.value =
-        filters.offset === 0
-          ? normalizedItems
-          : [...invitations.value, ...normalizedItems]
-      hasMoreInvitations.value = normalizedItems.length === filters.limit
+      invitations.value = Array.isArray(items) ? items : []
+      applyPaginatedItems(directory, invitations.value)
+      invitations.value = directory.items
     } catch {
       return
     }
   }
 
   watch(
-    () => [session.accessToken, filters.limit, filters.offset, filters.sortOrder, appliedSearch.value] as const,
+    () => [session.accessToken, filters.limit, filters.offset, filters.sortOrder, directory.appliedSearch] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
         invitations.value = []
-        hasMoreInvitations.value = true
+        resetPaginatedDirectory(directory, createInvitationFilters)
         return
       }
 
@@ -104,47 +122,11 @@ export const useInvitationsView = () => {
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => filters.search,
-    (value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        filters.offset = 0
-        appliedSearch.value = value.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
-    },
-  )
-
-  watch(
-    () => route.query,
     () => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      applyQueryState()
-    },
-  )
-
-  watch(
-    () => [filters.search, filters.sortOrder] as const,
-    async ([search, sortOrder]) => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      isSyncingRouteQuery = true
-
-      await router.replace({
-        query: {
-          ...route.query,
-          search: search.trim() || undefined,
-          sortOrder: sortOrder === 'DESC' ? undefined : sortOrder,
-        },
-      })
-
-      isSyncingRouteQuery = false
+      filters.offset = 0
+      directory.appliedSearch = filters.search.trim()
     },
   )
 
@@ -163,19 +145,19 @@ export const useInvitationsView = () => {
             email: form.email.trim(),
             role: form.role,
           }),
-        (error) => {
-          if (isApiError(error) && error.status === 409) {
-            if (/already registered/i.test(error.message)) {
-              return messages.value.invitations.alreadyRegistered
-            }
-
-            if (/already sent/i.test(error.message)) {
-              return messages.value.invitations.alreadyInvited
-            }
-          }
-
-          return getSafeErrorMessage(error, messages.value.invitations.createError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.invitations.createError, [
+            createStatusRule(
+              409,
+              messages.value.invitations.alreadyRegistered,
+              (apiError) => hasApiErrorMessage(apiError, [/already registered/i]),
+            ),
+            createStatusRule(
+              409,
+              messages.value.invitations.alreadyInvited,
+              (apiError) => hasApiErrorMessage(apiError, [/already sent/i]),
+            ),
+          ]),
       )
 
       if (filters.offset !== 0) {

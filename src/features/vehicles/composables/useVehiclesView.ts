@@ -1,7 +1,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getSafeErrorMessage, isApiError } from '@core/api'
+import { createStatusRule, getSafeErrorMessage, mapApiErrorMessage } from '@core/api'
 import { useSessionStore } from '@core/stores/session'
 import {
   createVehicle,
@@ -17,69 +17,27 @@ import type { VehicleItem } from '@features/vehicles/types/VehicleItem'
 import type { VehiclePayload } from '@features/vehicles/types/VehiclePayload'
 import type { VehicleSortBy } from '@features/vehicles/types/VehicleSortBy'
 import type { VehicleSortOrder } from '@features/vehicles/types/VehicleSortOrder'
+import { getTrackerToken } from '@features/trackers/utils/trackerToken'
+import {
+  applyPaginatedItems,
+  createPaginatedDirectoryState,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
 import type { OwnerUser } from '@shared/types'
 
 const DEFAULT_LIMIT = 20
-
-interface VehicleDirectoryState {
-  items: VehicleItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: VehicleSortBy
-    sortOrder: VehicleSortOrder
-  }
-}
-
-const createDirectoryState = (): VehicleDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'name',
-    sortOrder: 'ASC',
-  },
+const createVehicleFilters = () => ({
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  search: '',
+  sortBy: 'name' as VehicleSortBy,
+  sortOrder: 'ASC' as VehicleSortOrder,
 })
-
-const extractTrackerToken = (payload: unknown): string => {
-  if (typeof payload === 'string') {
-    return payload
-  }
-
-  if (!payload || typeof payload !== 'object') {
-    return ''
-  }
-
-  const safePayload = payload as Record<string, unknown>
-  const candidateKeys = ['secret_token', 'secretToken', 'token', 'tracker_token']
-
-  for (const key of candidateKeys) {
-    if (typeof safePayload[key] === 'string') {
-      return safePayload[key]
-    }
-  }
-
-  for (const value of Object.values(safePayload)) {
-    const nestedToken = extractTrackerToken(value)
-
-    if (nestedToken) {
-      return nestedToken
-    }
-  }
-
-  return ''
-}
 
 export const useVehiclesView = () => {
   const route = useRoute()
@@ -113,7 +71,7 @@ export const useVehiclesView = () => {
   } = useApiState('')
 
   const activeProfile = ref<OwnerUser | null>((session.user as OwnerUser | null) ?? null)
-  const directory = reactive<VehicleDirectoryState>(createDirectoryState())
+  const directory = reactive(createPaginatedDirectoryState<VehicleItem, ReturnType<typeof createVehicleFilters>>(createVehicleFilters))
   const trackers = ref<TrackerItem[]>([])
   const actionSuccess = ref('')
   const trackerToken = ref('')
@@ -133,8 +91,6 @@ export const useVehiclesView = () => {
     capacity: '',
     isActive: true,
   })
-  let isSyncingRouteQuery = false
-
   const items = computed(() => directory.items)
   const filters = computed(() => directory.filters)
   const isInitialLoading = computed(() => isLoading.value && !directory.hasLoaded)
@@ -158,16 +114,25 @@ export const useVehiclesView = () => {
     value === 'DESC' ? 'DESC' : 'ASC'
 
   const applyQueryState = (): void => {
-    isSyncingRouteQuery = true
     directory.filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     directory.filters.sortBy = normalizeSortBy(route.query.sortBy)
     directory.filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
     directory.filters.offset = 0
     directory.appliedSearch = directory.filters.search.trim()
-    isSyncingRouteQuery = false
   }
 
-  applyQueryState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState: applyQueryState,
+    buildRouteQuery: () => ({
+      ...route.query,
+      search: directory.filters.search.trim() || undefined,
+      sortBy: directory.filters.sortBy === 'name' ? undefined : directory.filters.sortBy,
+      sortOrder: directory.filters.sortOrder === 'ASC' ? undefined : directory.filters.sortOrder,
+    }),
+    watchSources: () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
+  })
 
   const toVehiclePayload = (): VehiclePayload => {
     const productionYear = vehicleForm.productionYear.trim()
@@ -218,13 +183,7 @@ export const useVehiclesView = () => {
         (error) => getSafeErrorMessage(error, messages.value.vehicles.loadError),
       )
 
-      const normalizedItems = Array.isArray(vehicleItems) ? vehicleItems : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(vehicleItems) ? vehicleItems : [])
     } catch {
       return
     }
@@ -264,7 +223,7 @@ export const useVehiclesView = () => {
       ] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
-        Object.assign(directory, createDirectoryState())
+        resetPaginatedDirectory(directory, createVehicleFilters)
         trackers.value = []
         return
       }
@@ -292,48 +251,11 @@ export const useVehiclesView = () => {
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => directory.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        directory.filters.offset = 0
-        directory.appliedSearch = directory.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
-    },
-  )
-
-  watch(
-    () => route.query,
     () => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      applyQueryState()
-    },
-  )
-
-  watch(
-    () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
-    async ([search, sortBy, sortOrder]) => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      isSyncingRouteQuery = true
-
-      await router.replace({
-        query: {
-          ...route.query,
-          search: search.trim() || undefined,
-          sortBy: sortBy === 'name' ? undefined : sortBy,
-          sortOrder: sortOrder === 'ASC' ? undefined : sortOrder,
-        },
-      })
-
-      isSyncingRouteQuery = false
+      directory.filters.offset = 0
+      directory.appliedSearch = directory.filters.search.trim()
     },
   )
 
@@ -407,13 +329,10 @@ export const useVehiclesView = () => {
           selectedVehicleForEdit.value
             ? updateVehicle(selectedVehicleForEdit.value.id, payload)
             : createVehicle(payload),
-        (error) => {
-          if (isApiError(error) && error.status === 409) {
-            return messages.value.vehicles.duplicateLicensePlate
-          }
-
-          return getSafeErrorMessage(error, messages.value.vehicles.saveError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.vehicles.saveError, [
+            createStatusRule(409, messages.value.vehicles.duplicateLicensePlate),
+          ]),
       )
 
       actionSuccess.value = selectedVehicleForEdit.value
@@ -439,13 +358,10 @@ export const useVehiclesView = () => {
     try {
       await executeDeleteAction(
         () => deleteVehicle(vehicle.id),
-        (error) => {
-          if (isApiError(error) && error.status === 409) {
-            return messages.value.vehicles.deleteConflict
-          }
-
-          return getSafeErrorMessage(error, messages.value.vehicles.deleteError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.vehicles.deleteError, [
+            createStatusRule(409, messages.value.vehicles.deleteConflict),
+          ]),
       )
 
       actionSuccess.value = messages.value.vehicles.deleteSuccess
@@ -532,7 +448,7 @@ export const useVehiclesView = () => {
         (error) => getSafeErrorMessage(error, messages.value.vehicles.trackerTokenError),
       )
 
-      trackerToken.value = extractTrackerToken(response)
+      trackerToken.value = getTrackerToken(response)
 
       if (!trackerToken.value) {
         trackerError.value = messages.value.vehicles.trackerTokenUnavailable

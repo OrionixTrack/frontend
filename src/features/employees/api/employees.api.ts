@@ -1,10 +1,9 @@
 import { deleteJson, getJson, putJson } from '@core/api'
+import type { ApiScope } from '@shared/types/ApiScope'
 
 import type { EmployeeItem } from '../types/EmployeeItem'
 import type { EmployeeListParams } from '../types/EmployeeListParams'
 import type { EmployeeType } from '../types/EmployeeType'
-
-export type EmployeeApiScope = 'owner' | 'dispatcher'
 
 const ownerEmployeeEndpointByType: Record<EmployeeType, string> = {
   driver: '/owner/employees/drivers',
@@ -13,7 +12,7 @@ const ownerEmployeeEndpointByType: Record<EmployeeType, string> = {
 
 const getEmployeeDirectoryEndpoint = (
   type: EmployeeType,
-  scope: EmployeeApiScope,
+  scope: ApiScope,
 ): string => {
   if (scope === 'dispatcher') {
     if (type === 'driver') {
@@ -30,7 +29,7 @@ export const getEmployees = (
   type: EmployeeType,
   params: EmployeeListParams,
   signal?: AbortSignal,
-  scope: EmployeeApiScope = 'owner',
+  scope: ApiScope = 'owner',
 ): Promise<EmployeeItem[]> =>
   getJson<EmployeeItem[]>(getEmployeeDirectoryEndpoint(type, scope), {
     query: params,

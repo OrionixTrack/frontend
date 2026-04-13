@@ -19,6 +19,17 @@ export const API_BASE_URL = trimTrailingSlash(
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
+interface ErrorResponsePayload {
+  message?: string | string[]
+  error?: string
+  retryAfter?: number
+}
+
+interface RequestErrorContext {
+  response: Response
+  payload: ErrorResponsePayload | null
+}
+
 const buildHeaders = (token?: string | null): HeadersInit => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -31,26 +42,25 @@ const buildHeaders = (token?: string | null): HeadersInit => {
   return headers
 }
 
-const parseErrorMessage = async (response: Response): Promise<string | null> => {
+const parseErrorPayload = async (response: Response): Promise<ErrorResponsePayload | null> => {
   try {
-    const payload = (await response.json()) as {
-      message?: string | string[]
-      error?: string
-    }
-
-    if (Array.isArray(payload?.message)) {
-      return payload.message.join(', ')
-    }
-
-    if (typeof payload?.message === 'string') {
-      return payload.message
-    }
-
-    if (typeof payload?.error === 'string') {
-      return payload.error
-    }
+    return (await response.json()) as ErrorResponsePayload
   } catch {
     return null
+  }
+}
+
+const getErrorMessage = (payload: ErrorResponsePayload | null): string | null => {
+  if (Array.isArray(payload?.message)) {
+    return payload.message.join(', ')
+  }
+
+  if (typeof payload?.message === 'string') {
+    return payload.message
+  }
+
+  if (typeof payload?.error === 'string') {
+    return payload.error
   }
 
   return null
@@ -112,6 +122,7 @@ const requestJson = async <TResponse>(
     timeoutMs?: number
     signal?: AbortSignal
     auth?: boolean
+    mapErrorResponse?: (context: RequestErrorContext) => Error | null
   } = {},
 ): Promise<TResponse> => {
   const {
@@ -121,6 +132,7 @@ const requestJson = async <TResponse>(
     timeoutMs = defaultTimeoutMs,
     signal,
     auth = true,
+    mapErrorResponse,
   } = options
   const { getAccessToken } = useSessionStore()
   const { signal: timeoutSignal, cleanup } = createTimeoutSignal(timeoutMs, signal)
@@ -160,7 +172,14 @@ const requestJson = async <TResponse>(
       handleUnauthorizedResponse()
     }
 
-    const message = (await parseErrorMessage(response)) || getRequestFailedMessage()
+    const payload = await parseErrorPayload(response)
+    const mappedError = mapErrorResponse?.({ response, payload })
+
+    if (mappedError) {
+      throw mappedError
+    }
+
+    const message = getErrorMessage(payload) || getRequestFailedMessage()
     throw new ApiError(message, response.status)
   }
 

@@ -1,4 +1,5 @@
 export type { Company } from './Company'
+export type { ApiScope } from './ApiScope'
 export type { DriverUser } from './DriverUser'
 export type { DispatcherUser } from './DispatcherUser'
 export type { OwnerUser } from './OwnerUser'

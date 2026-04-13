@@ -1,8 +1,8 @@
-import {computed, reactive, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import { computed, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import {getSafeErrorMessage, isApiError} from '@core/api'
-import {useSessionStore} from '@core/stores/session'
+import { createStatusRule, getSafeErrorMessage, mapApiErrorMessage } from '@core/api'
+import { useSessionStore } from '@core/stores/session'
 import {
   createTracker,
   deleteTracker,
@@ -13,78 +13,39 @@ import {
 } from '@features/vehicles/api/vehicles.api'
 import type {TrackerItem} from '@features/vehicles/types/TrackerItem'
 import type {VehicleItem} from '@features/vehicles/types/VehicleItem'
-import {useApiState} from '@shared/composables/useApiState'
-import {useI18n} from '@shared/composables/useI18n'
-import {useTheme} from '@shared/composables/useTheme'
-import type {OwnerUser} from '@shared/types'
+import { getTrackerToken } from '@features/trackers/utils/trackerToken'
+import {
+  applyPaginatedItems,
+  applyUniquePaginatedItems,
+  createPaginatedDirectoryState,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
+import { useApiState } from '@shared/composables/useApiState'
+import { useI18n } from '@shared/composables/useI18n'
+import { useTheme } from '@shared/composables/useTheme'
+import type { OwnerUser } from '@shared/types'
 
-import type {TrackerSortBy} from '../types/TrackerSortBy'
-import type {TrackerSortOrder} from '../types/TrackerSortOrder'
+import type { TrackerSortBy } from '../types/TrackerSortBy'
+import type { TrackerSortOrder } from '../types/TrackerSortOrder'
 
 const DEFAULT_LIMIT = 20
 const VEHICLE_PICKER_LIMIT = 10
 
-interface TrackerDirectoryState {
-  items: TrackerItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: TrackerSortBy
-    sortOrder: TrackerSortOrder
-  }
-}
-
-interface VehiclePickerState {
-  items: VehicleItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-  }
-}
-
-const createDirectoryState = (): TrackerDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'name',
-    sortOrder: 'ASC',
-  },
+const createTrackerFilters = () => ({
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  search: '',
+  sortBy: 'name' as TrackerSortBy,
+  sortOrder: 'ASC' as TrackerSortOrder,
 })
 
-const createVehiclePickerState = (): VehiclePickerState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: VEHICLE_PICKER_LIMIT,
-    offset: 0,
-    search: '',
-  },
+const createVehiclePickerFilters = () => ({
+  limit: VEHICLE_PICKER_LIMIT,
+  offset: 0,
+  search: '',
 })
-
-const extractTrackerToken = (payload: unknown): string => {
-  if (!payload || typeof payload !== 'object') {
-    return ''
-  }
-
-  const token = (payload as { device_secret_token?: unknown }).device_secret_token
-
-  return typeof token === 'string' ? token : ''
-}
 
 export const useTrackersView = () => {
   const route = useRoute()
@@ -117,8 +78,8 @@ export const useTrackersView = () => {
 
   const activeProfile = ref<OwnerUser | null>((session.user as OwnerUser | null) ?? null)
   const selectedVehicleOption = ref<VehicleItem | null>(null)
-  const directory = reactive<TrackerDirectoryState>(createDirectoryState())
-  const vehiclePicker = reactive<VehiclePickerState>(createVehiclePickerState())
+  const directory = reactive(createPaginatedDirectoryState<TrackerItem, ReturnType<typeof createTrackerFilters>>(createTrackerFilters))
+  const vehiclePicker = reactive(createPaginatedDirectoryState<VehicleItem, ReturnType<typeof createVehiclePickerFilters>>(createVehiclePickerFilters))
   const actionSuccess = ref('')
   const trackerToken = ref('')
   const isTrackerDialogOpen = ref(false)
@@ -132,8 +93,6 @@ export const useTrackersView = () => {
     name: '',
     vehicleId: '',
   })
-  let isSyncingRouteQuery = false
-
   const items = computed(() => directory.items)
   const filters = computed(() => directory.filters)
   const isInitialLoading = computed(() => isLoading.value && !directory.hasLoaded)
@@ -183,16 +142,25 @@ export const useTrackersView = () => {
     value === 'DESC' ? 'DESC' : 'ASC'
 
   const applyQueryState = (): void => {
-    isSyncingRouteQuery = true
     directory.filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     directory.filters.sortBy = normalizeSortBy(route.query.sortBy)
     directory.filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
     directory.filters.offset = 0
     directory.appliedSearch = directory.filters.search.trim()
-    isSyncingRouteQuery = false
   }
 
-  applyQueryState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState: applyQueryState,
+    buildRouteQuery: () => ({
+      ...route.query,
+      search: directory.filters.search.trim() || undefined,
+      sortBy: directory.filters.sortBy === 'name' ? undefined : directory.filters.sortBy,
+      sortOrder: directory.filters.sortOrder === 'ASC' ? undefined : directory.filters.sortOrder,
+    }),
+    watchSources: () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
+  })
 
   const syncTrackerForm = (tracker: TrackerItem | null): void => {
     trackerForm.name = tracker?.name ?? ''
@@ -220,13 +188,7 @@ export const useTrackersView = () => {
         (error) => getSafeErrorMessage(error, messages.value.trackers.loadError),
       )
 
-      const normalizedItems = Array.isArray(trackerItems) ? trackerItems : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(trackerItems) ? trackerItems : [])
     } catch {
       return
     }
@@ -269,13 +231,7 @@ export const useTrackersView = () => {
         () => '',
       )
 
-      const normalizedItems = Array.isArray(vehicleItems) ? vehicleItems : []
-      vehiclePicker.items =
-        vehiclePicker.filters.offset === 0
-          ? normalizedItems
-          : [...vehiclePicker.items, ...normalizedItems.filter((item) => !vehiclePicker.items.some((existing) => existing.id === item.id))]
-      vehiclePicker.hasNextPage = normalizedItems.length === vehiclePicker.filters.limit
-      vehiclePicker.hasLoaded = true
+      applyUniquePaginatedItems(vehiclePicker, Array.isArray(vehicleItems) ? vehicleItems : [])
     } catch {
       return
     }
@@ -301,8 +257,8 @@ export const useTrackersView = () => {
       ] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
-        Object.assign(directory, createDirectoryState())
-        Object.assign(vehiclePicker, createVehiclePickerState())
+        resetPaginatedDirectory(directory, createTrackerFilters)
+        resetPaginatedDirectory(vehiclePicker, createVehiclePickerFilters)
         selectedVehicleOption.value = null
         return
       }
@@ -314,33 +270,27 @@ export const useTrackersView = () => {
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => directory.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        directory.filters.offset = 0
-        directory.appliedSearch = directory.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      directory.filters.offset = 0
+      directory.appliedSearch = directory.filters.search.trim()
     },
   )
 
-  watch(
+  useDebouncedSearch(
     () => vehiclePicker.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        vehiclePicker.filters.offset = 0
-        vehiclePicker.appliedSearch = vehiclePicker.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      vehiclePicker.filters.offset = 0
+      vehiclePicker.appliedSearch = vehiclePicker.filters.search.trim()
     },
   )
 
   watch(
     () => [session.accessToken, vehiclePicker.filters.offset, vehiclePicker.appliedSearch, isTrackerDialogOpen.value] as const,
-    async ([token, _offset, _search, isDialogOpen], _previous, onCleanup) => {
+    async (values, _previous, onCleanup) => {
+      const [token, , , isDialogOpen] = values
+
       if (!token || !isDialogOpen) {
         return
       }
@@ -350,39 +300,6 @@ export const useTrackersView = () => {
       await loadVehicleOptions(controller.signal)
     },
     { immediate: true },
-  )
-
-  watch(
-    () => route.query,
-    () => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      applyQueryState()
-    },
-  )
-
-  watch(
-    () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
-    async ([search, sortBy, sortOrder]) => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      isSyncingRouteQuery = true
-
-      await router.replace({
-        query: {
-          ...route.query,
-          search: search.trim() || undefined,
-          sortBy: sortBy === 'name' ? undefined : sortBy,
-          sortOrder: sortOrder === 'ASC' ? undefined : sortOrder,
-        },
-      })
-
-      isSyncingRouteQuery = false
-    },
   )
 
   const handleLogout = async (): Promise<void> => {
@@ -396,7 +313,7 @@ export const useTrackersView = () => {
     trackerToken.value = ''
     selectedTrackerForEdit.value = null
     syncTrackerForm(null)
-    Object.assign(vehiclePicker, createVehiclePickerState())
+    resetPaginatedDirectory(vehiclePicker, createVehiclePickerFilters)
     selectedVehicleOption.value = null
     isTrackerDialogOpen.value = true
   }
@@ -407,7 +324,7 @@ export const useTrackersView = () => {
     trackerToken.value = ''
     selectedTrackerForEdit.value = tracker
     syncTrackerForm(tracker)
-    Object.assign(vehiclePicker, createVehiclePickerState())
+    resetPaginatedDirectory(vehiclePicker, createVehiclePickerFilters)
     isTrackerDialogOpen.value = true
 
     if (tracker.vehicle_id) {
@@ -421,7 +338,7 @@ export const useTrackersView = () => {
     resetTrackerError()
     selectedTrackerForEdit.value = null
     syncTrackerForm(null)
-    Object.assign(vehiclePicker, createVehiclePickerState())
+    resetPaginatedDirectory(vehiclePicker, createVehiclePickerFilters)
     selectedVehicleOption.value = null
     isTrackerDialogOpen.value = false
 
@@ -505,16 +422,13 @@ export const useTrackersView = () => {
           selectedTrackerForEdit.value
             ? updateTracker(selectedTrackerForEdit.value.id, payload)
             : createTracker(payload),
-        (error) => {
-          if (isApiError(error) && error.status === 409) {
-            return messages.value.trackers.vehicleConflict
-          }
-
-          return getSafeErrorMessage(error, messages.value.trackers.saveError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.trackers.saveError, [
+            createStatusRule(409, messages.value.trackers.vehicleConflict),
+          ]),
       )
 
-      trackerToken.value = extractTrackerToken(response)
+      trackerToken.value = getTrackerToken(response)
       actionSuccess.value = selectedTrackerForEdit.value
         ? messages.value.trackers.updateSuccess
         : messages.value.trackers.createSuccess
@@ -541,13 +455,10 @@ export const useTrackersView = () => {
     try {
       await executeDeleteAction(
         () => deleteTracker(tracker.id),
-        (error) => {
-          if (isApiError(error) && error.status === 409) {
-            return messages.value.trackers.deleteConflict
-          }
-
-          return getSafeErrorMessage(error, messages.value.trackers.deleteError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.trackers.deleteError, [
+            createStatusRule(409, messages.value.trackers.deleteConflict),
+          ]),
       )
 
       actionSuccess.value = messages.value.trackers.deleteSuccess
@@ -568,7 +479,7 @@ export const useTrackersView = () => {
         (error) => getSafeErrorMessage(error, messages.value.trackers.tokenError),
       )
 
-      trackerToken.value = extractTrackerToken(response)
+      trackerToken.value = getTrackerToken(response)
       actionSuccess.value = messages.value.trackers.tokenSuccess
       closeRegenerateConfirm()
       if (trackerToken.value) {

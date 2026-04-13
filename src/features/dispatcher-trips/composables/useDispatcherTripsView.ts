@@ -1,8 +1,8 @@
-import {computed, reactive, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import { computed, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import {ApiError, getSafeErrorMessage} from '@core/api'
-import {useSessionStore} from '@core/stores/session'
+import { ApiError, getSafeErrorMessage } from '@core/api'
+import { useSessionStore } from '@core/stores/session'
 import {
     cancelDispatcherTrip,
     createDispatcherTrip,
@@ -17,9 +17,15 @@ import {
 import {getEmployees} from '@features/employees/api/employees.api'
 import type {EmployeeItem} from '@features/employees/types/EmployeeItem'
 import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '@features/trips/live/trips.live'
-import {useApiState} from '@shared/composables/useApiState'
-import {useI18n} from '@shared/composables/useI18n'
-import {useTheme} from '@shared/composables/useTheme'
+import {
+  applyPaginatedItems,
+  applyUniquePaginatedItems,
+  createPaginatedDirectoryState,
+  useDebouncedSearch,
+} from '@shared/composables/paginatedDirectory'
+import { useApiState } from '@shared/composables/useApiState'
+import { useI18n } from '@shared/composables/useI18n'
+import { useTheme } from '@shared/composables/useTheme'
 import {
     connectTrackingSocket,
     onTelemetryUpdate,
@@ -27,68 +33,33 @@ import {
     subscribeTrip,
     unsubscribeTrip,
 } from '@shared/realtime/tracking.socket'
-import type {DispatcherUser} from '@shared/types'
-import {getVehicles} from '@features/vehicles/api/vehicles.api'
-import type {VehicleItem} from '@features/vehicles/types/VehicleItem'
+import type { DispatcherUser } from '@shared/types'
+import { getVehicles } from '@features/vehicles/api/vehicles.api'
+import type { VehicleItem } from '@features/vehicles/types/VehicleItem'
 
-import type {OwnerTripItem,} from '@features/trips/types/OwnerTripItem'
-import type {OwnerTripListParams} from '@features/trips/types/OwnerTripListParams'
-import type {OwnerTripSortBy} from '@features/trips/types/OwnerTripSortBy'
-import type {OwnerTripSortOrder} from '@features/trips/types/OwnerTripSortOrder'
-import type {OwnerTripStats} from '@features/trips/types/OwnerTripStats'
-import type {OwnerTripStatus} from '@features/trips/types/OwnerTripStatus'
+import type { OwnerTripItem } from '@features/trips/types/OwnerTripItem'
+import type { OwnerTripListParams } from '@features/trips/types/OwnerTripListParams'
+import type { OwnerTripSortBy } from '@features/trips/types/OwnerTripSortBy'
+import type { OwnerTripSortOrder } from '@features/trips/types/OwnerTripSortOrder'
+import type { OwnerTripStats } from '@features/trips/types/OwnerTripStats'
+import type { OwnerTripStatus } from '@features/trips/types/OwnerTripStatus'
 
-const DEFAULT_LIMIT = 20
 const DEFAULT_DIRECTORY_LIMIT = 20
-
-interface TripDirectoryState {
-  items: OwnerTripItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: OwnerTripSortBy
-    sortOrder: OwnerTripSortOrder
-    status: OwnerTripStatus | ''
-    dateFrom: string
-    dateTo: string
-  }
-}
-
-const createDirectoryState = (): TripDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'planned_start_datetime',
-    sortOrder: 'DESC',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
-  },
+const createTripFilters = () => ({
+  limit: 20,
+  offset: 0,
+  search: '',
+  sortBy: 'planned_start_datetime' as OwnerTripSortBy,
+  sortOrder: 'DESC' as OwnerTripSortOrder,
+  status: '' as OwnerTripStatus | '',
+  dateFrom: '',
+  dateTo: '',
 })
 
-interface ReferenceDirectoryState<TItem> {
-  items: TItem[]
-  hasNextPage: boolean
-  search: string
-  offset: number
-  hasLoaded: boolean
-}
-
-const createReferenceDirectoryState = <TItem>(): ReferenceDirectoryState<TItem> => ({
-  items: [],
-  hasNextPage: true,
-  search: '',
+const createReferenceFilters = () => ({
+  limit: DEFAULT_DIRECTORY_LIMIT,
   offset: 0,
-  hasLoaded: false,
+  search: '',
 })
 
 const toStartOfDay = (value: string): string => `${value}T00:00:00.000Z`
@@ -134,9 +105,9 @@ export const useDispatcherTripsView = () => {
   const { isLoading: isVehiclesLoading, execute: executeVehicles } = useApiState('')
 
   const activeProfile = ref<DispatcherUser | null>((session.user as DispatcherUser | null) ?? null)
-  const directory = reactive<TripDirectoryState>(createDirectoryState())
-  const driverDirectory = reactive<ReferenceDirectoryState<EmployeeItem>>(createReferenceDirectoryState())
-  const vehicleDirectory = reactive<ReferenceDirectoryState<VehicleItem>>(createReferenceDirectoryState())
+  const directory = reactive(createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripFilters>>(createTripFilters))
+  const driverDirectory = reactive(createPaginatedDirectoryState<EmployeeItem, ReturnType<typeof createReferenceFilters>>(createReferenceFilters))
+  const vehicleDirectory = reactive(createPaginatedDirectoryState<VehicleItem, ReturnType<typeof createReferenceFilters>>(createReferenceFilters))
   const selectedTrip = ref<OwnerTripItem | null>(null)
   const selectedTripStats = ref<OwnerTripStats | null>(null)
   const selectedDriver = ref<EmployeeItem | null>(null)
@@ -296,30 +267,24 @@ export const useDispatcherTripsView = () => {
         (error) => getSafeErrorMessage(error, messages.value.trips.loadError),
       )
 
-      const normalizedItems = Array.isArray(trips) ? trips : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(trips) ? trips : [])
     } catch {
       return
     }
   }
 
   const loadDrivers = async (reset = false, signal?: AbortSignal): Promise<void> => {
-    const offset = reset ? 0 : driverDirectory.offset
+    const offset = reset ? 0 : driverDirectory.filters.offset
     const response = await executeDrivers(
       () =>
         getEmployees(
           'driver',
           {
-            limit: DEFAULT_DIRECTORY_LIMIT,
+            limit: driverDirectory.filters.limit,
             offset,
             sortBy: 'name',
             sortOrder: 'ASC',
-            search: driverDirectory.search.trim() || undefined,
+            search: driverDirectory.filters.search.trim() || undefined,
           },
           signal,
           'dispatcher',
@@ -328,23 +293,21 @@ export const useDispatcherTripsView = () => {
     )
 
     const items = Array.isArray(response) ? response : []
-    driverDirectory.items = reset ? items : [...driverDirectory.items, ...items]
-    driverDirectory.offset = offset
-    driverDirectory.hasNextPage = items.length === DEFAULT_DIRECTORY_LIMIT
-    driverDirectory.hasLoaded = true
+    driverDirectory.filters.offset = offset
+    applyUniquePaginatedItems(driverDirectory, items)
   }
 
   const loadVehicles = async (reset = false, signal?: AbortSignal): Promise<void> => {
-    const offset = reset ? 0 : vehicleDirectory.offset
+    const offset = reset ? 0 : vehicleDirectory.filters.offset
     const response = await executeVehicles(
       () =>
         getVehicles(
           {
-            limit: DEFAULT_DIRECTORY_LIMIT,
+            limit: vehicleDirectory.filters.limit,
             offset,
             sortBy: 'name',
             sortOrder: 'ASC',
-            search: vehicleDirectory.search.trim() || undefined,
+            search: vehicleDirectory.filters.search.trim() || undefined,
           },
           signal,
           'dispatcher',
@@ -353,10 +316,8 @@ export const useDispatcherTripsView = () => {
     )
 
     const items = Array.isArray(response) ? response : []
-    vehicleDirectory.items = reset ? items : [...vehicleDirectory.items, ...items]
-    vehicleDirectory.offset = offset
-    vehicleDirectory.hasNextPage = items.length === DEFAULT_DIRECTORY_LIMIT
-    vehicleDirectory.hasLoaded = true
+    vehicleDirectory.filters.offset = offset
+    applyUniquePaginatedItems(vehicleDirectory, items)
   }
 
   const loadTripDetails = async (tripId: number, signal?: AbortSignal): Promise<void> => {
@@ -410,7 +371,7 @@ export const useDispatcherTripsView = () => {
     () => [session.accessToken, directory.filters.limit, directory.filters.offset, directory.filters.sortBy, directory.filters.sortOrder, directory.filters.status, directory.filters.dateFrom, directory.filters.dateTo, directory.appliedSearch] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0] || session.role !== 'dispatcher') {
-        Object.assign(directory, createDirectoryState())
+        Object.assign(directory, createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripFilters>>(createTripFilters))
         selectedTrip.value = null
         selectedTripStats.value = null
         return
@@ -428,7 +389,7 @@ export const useDispatcherTripsView = () => {
   )
 
   watch(
-    () => [session.accessToken, route.name, driverDirectory.search] as const,
+    () => [session.accessToken, route.name, driverDirectory.filters.search] as const,
     async ([token], _previous, onCleanup) => {
       if (!token || session.role !== 'dispatcher' || !isFormRoute.value) {
         return
@@ -436,14 +397,14 @@ export const useDispatcherTripsView = () => {
 
       const controller = new AbortController()
       onCleanup(() => controller.abort())
-      driverDirectory.offset = 0
+      driverDirectory.filters.offset = 0
       await loadDrivers(true, controller.signal)
     },
     { immediate: true },
   )
 
   watch(
-    () => [session.accessToken, route.name, vehicleDirectory.search] as const,
+    () => [session.accessToken, route.name, vehicleDirectory.filters.search] as const,
     async ([token], _previous, onCleanup) => {
       if (!token || session.role !== 'dispatcher' || !isFormRoute.value) {
         return
@@ -451,21 +412,17 @@ export const useDispatcherTripsView = () => {
 
       const controller = new AbortController()
       onCleanup(() => controller.abort())
-      vehicleDirectory.offset = 0
+      vehicleDirectory.filters.offset = 0
       await loadVehicles(true, controller.signal)
     },
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => directory.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        directory.filters.offset = 0
-        directory.appliedSearch = directory.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      directory.filters.offset = 0
+      directory.appliedSearch = directory.filters.search.trim()
     },
   )
 
@@ -808,10 +765,10 @@ export const useDispatcherTripsView = () => {
       }
     },
     setDriverSearchQuery: (value: string) => {
-      driverDirectory.search = value
+      driverDirectory.filters.search = value
     },
     setVehicleSearchQuery: (value: string) => {
-      vehicleDirectory.search = value
+      vehicleDirectory.filters.search = value
     },
     setSearch: (value: string) => {
       resetPageError()
@@ -838,8 +795,8 @@ export const useDispatcherTripsView = () => {
     theme,
     driverOptions,
     vehicleOptions,
-    driverSearchQuery: computed(() => driverDirectory.search),
-    vehicleSearchQuery: computed(() => vehicleDirectory.search),
+    driverSearchQuery: computed(() => driverDirectory.filters.search),
+    vehicleSearchQuery: computed(() => vehicleDirectory.filters.search),
     selectedDriverLabel,
     selectedVehicleLabel,
     isDriversLoading,
@@ -850,14 +807,14 @@ export const useDispatcherTripsView = () => {
       if (!driverDirectory.hasNextPage || isDriversLoading.value) {
         return
       }
-      driverDirectory.offset += DEFAULT_DIRECTORY_LIMIT
+      driverDirectory.filters.offset += driverDirectory.filters.limit
       await loadDrivers(false)
     },
     loadMoreVehicles: async () => {
       if (!vehicleDirectory.hasNextPage || isVehiclesLoading.value) {
         return
       }
-      vehicleDirectory.offset += DEFAULT_DIRECTORY_LIMIT
+      vehicleDirectory.filters.offset += vehicleDirectory.filters.limit
       await loadVehicles(false)
     },
     openDriverPicker: async () => {

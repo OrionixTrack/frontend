@@ -20,95 +20,181 @@ export interface TelemetryUpdateEventPayload {
   humidity?: number | null
 }
 
-const trackingSocketUrl = `${API_BASE_URL}/tracking`
-let socket: Socket | null = null
-let activeToken: string | null = null
-const companySubscriptions = new Set<number>()
-const tripSubscriptions = new Set<number>()
+type TripStatusListener = (payload: TripStatusEventPayload) => void
+type TelemetryUpdateListener = (payload: TelemetryUpdateEventPayload) => void
 
-const ensureSocket = (token: string): Socket => {
-  if (socket && activeToken === token) {
-    if (!socket.connected) {
-      socket.connect()
+const trackingSocketUrl = `${API_BASE_URL}/tracking`
+
+class TrackingSocketClient {
+  private socket: Socket | null = null
+  private activeToken: string | null = null
+  private readonly companySubscriptions = new Map<number, number>()
+  private readonly tripSubscriptions = new Map<number, number>()
+  private readonly tripStatusListeners = new Set<TripStatusListener>()
+  private readonly telemetryListeners = new Set<TelemetryUpdateListener>()
+
+  connect(token: string): Socket {
+    if (this.socket && this.activeToken === token) {
+      if (!this.socket.connected) {
+        this.socket.connect()
+      }
+
+      return this.socket
     }
 
-    return socket
+    this.teardownSocket()
+
+    this.socket = io(trackingSocketUrl, {
+      auth: { token },
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1_000,
+      reconnectionDelayMax: 10_000,
+      transports: ['websocket'],
+    })
+    this.activeToken = token
+    this.bindSocketEvents(this.socket)
+
+    return this.socket
   }
 
-  socket?.disconnect()
+  disconnect(): void {
+    this.companySubscriptions.clear()
+    this.tripSubscriptions.clear()
+    this.teardownSocket()
+    this.activeToken = null
+  }
 
-  socket = io(trackingSocketUrl, {
-    auth: {
-      token,
-    },
-    autoConnect: true,
-    transports: ['websocket'],
-  })
+  subscribeCompany(token: string, companyId: number): void {
+    const socket = this.connect(token)
+    const nextCount = (this.companySubscriptions.get(companyId) ?? 0) + 1
+    this.companySubscriptions.set(companyId, nextCount)
 
-  activeToken = token
+    if (nextCount === 1) {
+      socket.emit('subscribe:company', { companyId })
+    }
+  }
 
-  socket.on('connect', () => {
-    companySubscriptions.forEach((companyId) => {
-      socket?.emit('subscribe:company', { companyId })
+  unsubscribeCompany(companyId: number): void {
+    const currentCount = this.companySubscriptions.get(companyId)
+
+    if (!currentCount) {
+      return
+    }
+
+    if (currentCount === 1) {
+      this.companySubscriptions.delete(companyId)
+      this.socket?.emit('unsubscribe:company', { companyId })
+      return
+    }
+
+    this.companySubscriptions.set(companyId, currentCount - 1)
+  }
+
+  subscribeTrip(token: string, tripId: number): void {
+    const socket = this.connect(token)
+    const nextCount = (this.tripSubscriptions.get(tripId) ?? 0) + 1
+    this.tripSubscriptions.set(tripId, nextCount)
+
+    if (nextCount === 1) {
+      socket.emit('subscribe:trip', { tripId })
+    }
+  }
+
+  unsubscribeTrip(tripId: number): void {
+    const currentCount = this.tripSubscriptions.get(tripId)
+
+    if (!currentCount) {
+      return
+    }
+
+    if (currentCount === 1) {
+      this.tripSubscriptions.delete(tripId)
+      this.socket?.emit('unsubscribe:trip', { tripId })
+      return
+    }
+
+    this.tripSubscriptions.set(tripId, currentCount - 1)
+  }
+
+  onTripStatus(listener: TripStatusListener): () => void {
+    this.tripStatusListeners.add(listener)
+
+    return () => {
+      this.tripStatusListeners.delete(listener)
+    }
+  }
+
+  onTelemetryUpdate(listener: TelemetryUpdateListener): () => void {
+    this.telemetryListeners.add(listener)
+
+    return () => {
+      this.telemetryListeners.delete(listener)
+    }
+  }
+
+  private bindSocketEvents(socket: Socket): void {
+    socket.on('connect', () => {
+      this.replaySubscriptions()
     })
 
-    tripSubscriptions.forEach((tripId) => {
-      socket?.emit('subscribe:trip', { tripId })
+    socket.on('trip:status', (payload: TripStatusEventPayload) => {
+      this.tripStatusListeners.forEach((listener) => listener(payload))
     })
-  })
 
-  return socket
+    socket.on('telemetry:update', (payload: TelemetryUpdateEventPayload) => {
+      this.telemetryListeners.forEach((listener) => listener(payload))
+    })
+  }
+
+  private replaySubscriptions(): void {
+    this.companySubscriptions.forEach((_count, companyId) => {
+      this.socket?.emit('subscribe:company', { companyId })
+    })
+
+    this.tripSubscriptions.forEach((_count, tripId) => {
+      this.socket?.emit('subscribe:trip', { tripId })
+    })
+  }
+
+  private teardownSocket(): void {
+    if (!this.socket) {
+      return
+    }
+
+    this.socket.removeAllListeners()
+    this.socket.disconnect()
+    this.socket = null
+  }
 }
 
-export const connectTrackingSocket = (token: string): Socket =>
-  ensureSocket(token)
+const trackingSocketClient = new TrackingSocketClient()
+
+export const connectTrackingSocket = (token: string): Socket => trackingSocketClient.connect(token)
 
 export const disconnectTrackingSocket = (): void => {
-  companySubscriptions.clear()
-  tripSubscriptions.clear()
-  socket?.disconnect()
-  socket = null
-  activeToken = null
+  trackingSocketClient.disconnect()
 }
 
 export const subscribeCompany = (token: string, companyId: number): void => {
-  const instance = ensureSocket(token)
-  companySubscriptions.add(companyId)
-  instance.emit('subscribe:company', { companyId })
+  trackingSocketClient.subscribeCompany(token, companyId)
 }
 
 export const unsubscribeCompany = (companyId: number): void => {
-  companySubscriptions.delete(companyId)
-  socket?.emit('unsubscribe:company', { companyId })
+  trackingSocketClient.unsubscribeCompany(companyId)
 }
 
 export const subscribeTrip = (token: string, tripId: number): void => {
-  const instance = ensureSocket(token)
-  tripSubscriptions.add(tripId)
-  instance.emit('subscribe:trip', { tripId })
+  trackingSocketClient.subscribeTrip(token, tripId)
 }
 
 export const unsubscribeTrip = (tripId: number): void => {
-  tripSubscriptions.delete(tripId)
-  socket?.emit('unsubscribe:trip', { tripId })
+  trackingSocketClient.unsubscribeTrip(tripId)
 }
 
-export const onTripStatus = (
-  listener: (payload: TripStatusEventPayload) => void,
-): (() => void) => {
-  socket?.on('trip:status', listener)
+export const onTripStatus = (listener: TripStatusListener): (() => void) =>
+  trackingSocketClient.onTripStatus(listener)
 
-  return () => {
-    socket?.off('trip:status', listener)
-  }
-}
-
-export const onTelemetryUpdate = (
-  listener: (payload: TelemetryUpdateEventPayload) => void,
-): (() => void) => {
-  socket?.on('telemetry:update', listener)
-
-  return () => {
-    socket?.off('telemetry:update', listener)
-  }
-}
+export const onTelemetryUpdate = (listener: TelemetryUpdateListener): (() => void) =>
+  trackingSocketClient.onTelemetryUpdate(listener)

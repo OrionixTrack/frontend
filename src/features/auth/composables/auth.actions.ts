@@ -1,7 +1,13 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { Router } from 'vue-router'
 
-import { getSafeErrorMessage, isApiError } from '@core/api/errors'
+import {
+  createStatusRule,
+  getSafeErrorMessage,
+  hasApiErrorMessage,
+  isApiError,
+  mapApiErrorMessage,
+} from '@core/api'
 import { useSessionStore } from '@core/stores/session'
 import {
   ResendVerificationRateLimitError,
@@ -233,21 +239,20 @@ export const createAuthActions = ({
               },
               controller.signal,
             ),
-          (error) => {
-            if (isApiError(error) && error.status === 400) {
-              if (/expired/i.test(error.message)) {
-                return AUTH_ERROR_CODES.acceptInvitationExpired
-              }
-
-              if (/no longer valid|already/i.test(error.message)) {
-                return AUTH_ERROR_CODES.acceptInvitationUsed
-              }
-
-              return AUTH_ERROR_CODES.acceptInvitationInvalid
-            }
-
-            return getSafeErrorMessage(error, AUTH_ERROR_CODES.signInError)
-          },
+          (error) =>
+            mapApiErrorMessage(error, AUTH_ERROR_CODES.signInError, [
+              createStatusRule(
+                400,
+                AUTH_ERROR_CODES.acceptInvitationExpired,
+                (apiError) => hasApiErrorMessage(apiError, [/expired/i]),
+              ),
+              createStatusRule(
+                400,
+                AUTH_ERROR_CODES.acceptInvitationUsed,
+                (apiError) => hasApiErrorMessage(apiError, [/no longer valid/i, /already/i]),
+              ),
+              createStatusRule(400, AUTH_ERROR_CODES.acceptInvitationInvalid),
+            ]),
         )
         form.value.password = ''
         const normalizedPayload =

@@ -1,8 +1,16 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getSafeErrorMessage, isApiError } from '@core/api'
+import { createStatusRule, getSafeErrorMessage, mapApiErrorMessage } from '@core/api'
 import { useSessionStore } from '@core/stores/session'
+import {
+  applyPaginatedItems,
+  applyUniquePaginatedItems,
+  createPaginatedDirectoryState,
+  resetPaginatedDirectory,
+  useDebouncedSearch,
+  useDirectoryRouteSync,
+} from '@shared/composables/paginatedDirectory'
 import { useApiState } from '@shared/composables/useApiState'
 import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
@@ -28,57 +36,18 @@ import type { TrackingChannelSortOrder } from '../types/TrackingChannelSortOrder
 
 const DEFAULT_LIMIT = 20
 const TRIP_PICKER_LIMIT = 10
-
-interface ChannelDirectoryState {
-  items: TrackingChannelItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-    sortBy: TrackingChannelSortBy
-    sortOrder: TrackingChannelSortOrder
-  }
-}
-
-interface TripPickerState {
-  items: OwnerTripItem[]
-  hasNextPage: boolean
-  hasLoaded: boolean
-  appliedSearch: string
-  filters: {
-    limit: number
-    offset: number
-    search: string
-  }
-}
-
-const createDirectoryState = (): ChannelDirectoryState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: DEFAULT_LIMIT,
-    offset: 0,
-    search: '',
-    sortBy: 'name',
-    sortOrder: 'ASC',
-  },
+const createChannelFilters = () => ({
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  search: '',
+  sortBy: 'name' as TrackingChannelSortBy,
+  sortOrder: 'ASC' as TrackingChannelSortOrder,
 })
 
-const createTripPickerState = (): TripPickerState => ({
-  items: [],
-  hasNextPage: true,
-  hasLoaded: false,
-  appliedSearch: '',
-  filters: {
-    limit: TRIP_PICKER_LIMIT,
-    offset: 0,
-    search: '',
-  },
+const createTripPickerFilters = () => ({
+  limit: TRIP_PICKER_LIMIT,
+  offset: 0,
+  search: '',
 })
 
 export const useChannelsView = () => {
@@ -114,8 +83,8 @@ export const useChannelsView = () => {
   const activeProfile = ref<OwnerUser | DispatcherUser | null>(
     (session.user as OwnerUser | DispatcherUser | null) ?? null,
   )
-  const directory = reactive<ChannelDirectoryState>(createDirectoryState())
-  const tripPicker = reactive<TripPickerState>(createTripPickerState())
+  const directory = reactive(createPaginatedDirectoryState<TrackingChannelItem, ReturnType<typeof createChannelFilters>>(createChannelFilters))
+  const tripPicker = reactive(createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripPickerFilters>>(createTripPickerFilters))
   const selectedTripOption = ref<OwnerTripItem | null>(null)
   const actionSuccess = ref('')
   const isChannelDialogOpen = ref(false)
@@ -126,8 +95,6 @@ export const useChannelsView = () => {
     name: '',
     assignedTripId: '',
   })
-  let isSyncingRouteQuery = false
-
   const items = computed(() => directory.items)
   const filters = computed(() => directory.filters)
   const isInitialLoading = computed(() => isLoading.value && !directory.hasLoaded)
@@ -169,16 +136,25 @@ export const useChannelsView = () => {
     value === 'DESC' ? 'DESC' : 'ASC'
 
   const applyQueryState = (): void => {
-    isSyncingRouteQuery = true
     directory.filters.search = typeof route.query.search === 'string' ? route.query.search : ''
     directory.filters.sortBy = normalizeSortBy(route.query.sortBy)
     directory.filters.sortOrder = normalizeSortOrder(route.query.sortOrder)
     directory.filters.offset = 0
     directory.appliedSearch = directory.filters.search.trim()
-    isSyncingRouteQuery = false
   }
 
-  applyQueryState()
+  useDirectoryRouteSync({
+    route,
+    router,
+    applyRouteState: applyQueryState,
+    buildRouteQuery: () => ({
+      ...route.query,
+      search: directory.filters.search.trim() || undefined,
+      sortBy: directory.filters.sortBy === 'name' ? undefined : directory.filters.sortBy,
+      sortOrder: directory.filters.sortOrder === 'ASC' ? undefined : directory.filters.sortOrder,
+    }),
+    watchSources: () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
+  })
 
   const resetFeedback = (): void => {
     actionSuccess.value = ''
@@ -208,13 +184,7 @@ export const useChannelsView = () => {
         (error) => getSafeErrorMessage(error, messages.value.channels.loadError),
       )
 
-      const normalizedItems = Array.isArray(channels) ? channels : []
-      directory.items =
-        directory.filters.offset === 0
-          ? normalizedItems
-          : [...directory.items, ...normalizedItems]
-      directory.hasNextPage = normalizedItems.length === directory.filters.limit
-      directory.hasLoaded = true
+      applyPaginatedItems(directory, Array.isArray(channels) ? channels : [])
     } catch {
       return
     }
@@ -260,13 +230,7 @@ export const useChannelsView = () => {
         () => '',
       )
 
-      const normalizedItems = Array.isArray(trips) ? trips : []
-      tripPicker.items =
-        tripPicker.filters.offset === 0
-          ? normalizedItems
-          : [...tripPicker.items, ...normalizedItems.filter((item) => !tripPicker.items.some((existing) => existing.id === item.id))]
-      tripPicker.hasNextPage = normalizedItems.length === tripPicker.filters.limit
-      tripPicker.hasLoaded = true
+      applyUniquePaginatedItems(tripPicker, Array.isArray(trips) ? trips : [])
     } catch {
       return
     }
@@ -284,8 +248,8 @@ export const useChannelsView = () => {
       ] as const,
     async (token, _previous, onCleanup) => {
       if (!token[0]) {
-        Object.assign(directory, createDirectoryState())
-        Object.assign(tripPicker, createTripPickerState())
+        resetPaginatedDirectory(directory, createChannelFilters)
+        resetPaginatedDirectory(tripPicker, createTripPickerFilters)
         selectedTripOption.value = null
         return
       }
@@ -297,33 +261,27 @@ export const useChannelsView = () => {
     { immediate: true },
   )
 
-  watch(
+  useDebouncedSearch(
     () => directory.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        directory.filters.offset = 0
-        directory.appliedSearch = directory.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      directory.filters.offset = 0
+      directory.appliedSearch = directory.filters.search.trim()
     },
   )
 
-  watch(
+  useDebouncedSearch(
     () => tripPicker.filters.search,
-    (_value, _previous, onCleanup) => {
-      const timeoutId = window.setTimeout(() => {
-        tripPicker.filters.offset = 0
-        tripPicker.appliedSearch = tripPicker.filters.search.trim()
-      }, 250)
-
-      onCleanup(() => window.clearTimeout(timeoutId))
+    () => {
+      tripPicker.filters.offset = 0
+      tripPicker.appliedSearch = tripPicker.filters.search.trim()
     },
   )
 
   watch(
     () => [session.accessToken, tripPicker.filters.offset, tripPicker.appliedSearch, isChannelDialogOpen.value] as const,
-    async ([token, _offset, _search, isDialogOpen], _previous, onCleanup) => {
+    async (values, _previous, onCleanup) => {
+      const [token, , , isDialogOpen] = values
+
       if (!token || !isDialogOpen) {
         return
       }
@@ -333,39 +291,6 @@ export const useChannelsView = () => {
       await loadTripOptions(controller.signal)
     },
     { immediate: true },
-  )
-
-  watch(
-    () => route.query,
-    () => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      applyQueryState()
-    },
-  )
-
-  watch(
-    () => [directory.filters.search, directory.filters.sortBy, directory.filters.sortOrder] as const,
-    async ([search, sortBy, sortOrder]) => {
-      if (isSyncingRouteQuery) {
-        return
-      }
-
-      isSyncingRouteQuery = true
-
-      await router.replace({
-        query: {
-          ...route.query,
-          search: search.trim() || undefined,
-          sortBy: sortBy === 'name' ? undefined : sortBy,
-          sortOrder: sortOrder === 'ASC' ? undefined : sortOrder,
-        },
-      })
-
-      isSyncingRouteQuery = false
-    },
   )
 
   const handleLogout = async (): Promise<void> => {
@@ -382,7 +307,7 @@ export const useChannelsView = () => {
     resetChannelError()
     selectedChannelForEdit.value = null
     syncForm(null)
-    Object.assign(tripPicker, createTripPickerState())
+    resetPaginatedDirectory(tripPicker, createTripPickerFilters)
     selectedTripOption.value = null
     isChannelDialogOpen.value = true
   }
@@ -401,7 +326,7 @@ export const useChannelsView = () => {
 
     selectedChannelForEdit.value = detail
     syncForm(detail)
-    Object.assign(tripPicker, createTripPickerState())
+    resetPaginatedDirectory(tripPicker, createTripPickerFilters)
     isChannelDialogOpen.value = true
 
     if (detail.assigned_trip_id) {
@@ -415,7 +340,7 @@ export const useChannelsView = () => {
     resetChannelError()
     selectedChannelForEdit.value = null
     syncForm(null)
-    Object.assign(tripPicker, createTripPickerState())
+    resetPaginatedDirectory(tripPicker, createTripPickerFilters)
     selectedTripOption.value = null
     isChannelDialogOpen.value = false
   }
@@ -464,13 +389,10 @@ export const useChannelsView = () => {
                   ? updateTrackingChannel(selectedChannelForEdit.value.id, payload)
                   : createTrackingChannel(payload)
               })(),
-        (error) => {
-          if (isApiError(error) && error.status === 400) {
-            return messages.value.channels.tripConflict
-          }
-
-          return getSafeErrorMessage(error, messages.value.channels.saveError)
-        },
+        (error) =>
+          mapApiErrorMessage(error, messages.value.channels.saveError, [
+            createStatusRule(400, messages.value.channels.tripConflict),
+          ]),
       )
 
       actionSuccess.value = selectedChannelForEdit.value || isDispatcher.value
