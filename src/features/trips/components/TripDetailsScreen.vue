@@ -9,6 +9,7 @@ import type { SessionState } from '@shared/types'
 
 import TripMetricChart from './TripMetricChart.vue'
 import TripMap from './TripMap.vue'
+import type { LiveTrackPoint } from '../live/trips.live'
 import type { OwnerTripItem } from '../types/OwnerTripItem'
 import type { OwnerTripStats } from '../types/OwnerTripStats'
 
@@ -19,6 +20,7 @@ const props = defineProps<{
   messages: TranslationDictionary
   theme: AppTheme
   selectedTrip: OwnerTripItem | null
+  liveTrackPoints: LiveTrackPoint[]
   detailError: string
   isDetailLoading: boolean
   detailTab: 'overview' | 'stats'
@@ -133,9 +135,11 @@ const normalizeChartPoints = (metric: 'temperature' | 'humidity' | 'speed'): Cha
     .filter((item): item is ChartPoint => item !== null)
 }
 
-const routeStatusTone = computed(() =>
-  props.selectedTrip?.trackPolyline ? 'completed' : 'cancelled',
+const hasRouteTrack = computed(
+  () => Boolean(props.selectedTrip?.trackPolyline) || props.liveTrackPoints.length > 1,
 )
+
+const routeStatusTone = computed(() => (hasRouteTrack.value ? 'completed' : 'cancelled'))
 
 const isHistoricalTelemetry = computed(() =>
   props.selectedTrip?.status === 'completed' || props.selectedTrip?.status === 'cancelled',
@@ -225,7 +229,7 @@ const speedChart = computed(() => normalizeChartPoints('speed'))
                   <p class="muted-copy">{{ messages.trips.routeDescription }}</p>
                 </div>
                 <span class="status-pill" :class="routeStatusTone">
-                  {{ selectedTrip.trackPolyline ? messages.trips.routeTrackAvailable : messages.trips.routeTrackUnavailable }}
+                  {{ hasRouteTrack ? messages.trips.routeTrackAvailable : messages.trips.routeTrackUnavailable }}
                 </span>
               </div>
 
@@ -239,6 +243,7 @@ const speedChart = computed(() => normalizeChartPoints('speed'))
                 :current-longitude="selectedTrip.currentTelemetry?.longitude"
                 :current-bearing="selectedTrip.currentTelemetry?.bearing"
                 :track-polyline="selectedTrip.trackPolyline"
+                :live-track-points="liveTrackPoints"
               />
 
               <div class="trip-route-points">

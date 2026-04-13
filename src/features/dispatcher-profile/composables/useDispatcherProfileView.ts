@@ -1,7 +1,7 @@
 import { reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getSafeErrorMessage } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import { getDispatcherProfile, updateDispatcherProfile } from '@features/dispatcher-profile/api/dispatcher-profile.api'
 import { useApiState } from '@shared/composables/useApiState'
@@ -10,7 +10,6 @@ import { useTheme } from '@shared/composables/useTheme'
 import type { DispatcherUser } from '@shared/types'
 
 export const useDispatcherProfileView = () => {
-  const router = useRouter()
   const { session, logout, updateUser } = useSessionStore()
   const { theme, setTheme } = useTheme()
   const { locale, messages } = useI18n()
@@ -66,8 +65,7 @@ export const useDispatcherProfileView = () => {
   )
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   const handleSubmit = async (): Promise<void> => {

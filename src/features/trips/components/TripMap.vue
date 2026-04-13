@@ -13,6 +13,7 @@ const props = defineProps<{
   currentLongitude?: number | null
   currentBearing?: number | null
   trackPolyline?: unknown | null
+  liveTrackPoints?: Array<{ latitude: number; longitude: number }>
 }>()
 
 const mapElement = ref<HTMLElement | null>(null)
@@ -112,6 +113,46 @@ const getRoutePoints = (): Array<[number, number]> | null => {
   return null
 }
 
+const getLiveRoutePoints = (): Array<[number, number]> | null => {
+  if (!Array.isArray(props.liveTrackPoints) || props.liveTrackPoints.length === 0) {
+    return null
+  }
+
+  const points = props.liveTrackPoints
+    .filter((point) => Number.isFinite(point.latitude) && Number.isFinite(point.longitude))
+    .map((point) => [point.latitude, point.longitude] as [number, number])
+
+  return points.length > 0 ? points : null
+}
+
+const isSamePoint = (left: [number, number], right: [number, number]): boolean =>
+  Math.abs(left[0] - right[0]) < 0.000001 && Math.abs(left[1] - right[1]) < 0.000001
+
+const getDisplayRoutePoints = (): Array<[number, number]> | null => {
+  const historicalPoints = getRoutePoints()
+  const livePoints = getLiveRoutePoints()
+
+  if (!historicalPoints?.length) {
+    return livePoints && livePoints.length > 1 ? livePoints : null
+  }
+
+  if (!livePoints?.length) {
+    return historicalPoints
+  }
+
+  const mergedPoints = [...historicalPoints]
+
+  livePoints.forEach((point) => {
+    const lastPoint = mergedPoints[mergedPoints.length - 1]
+
+    if (!lastPoint || !isSamePoint(lastPoint, point)) {
+      mergedPoints.push(point)
+    }
+  })
+
+  return mergedPoints.length > 1 ? mergedPoints : null
+}
+
 const syncLayers = (): void => {
   if (!map) {
     return
@@ -142,7 +183,7 @@ const syncLayers = (): void => {
     finishMarker.setLatLng(finishLatLng)
   }
 
-  const routePoints = getRoutePoints()
+  const routePoints = getDisplayRoutePoints()
   if (routePoints) {
     if (!routeLine) {
       routeLine = L.polyline(routePoints, {
@@ -191,7 +232,7 @@ const fitBounds = (): void => {
     return
   }
 
-  const routePoints = getRoutePoints()
+  const routePoints = getDisplayRoutePoints()
   const fallbackPoints: Array<[number, number]> = [
     [props.startLatitude, props.startLongitude],
     [props.finishLatitude, props.finishLongitude],
@@ -271,6 +312,7 @@ watch(
     props.currentLongitude,
     props.currentBearing,
     props.trackPolyline,
+    props.liveTrackPoints,
   ] as const,
   () => {
     syncLayers()

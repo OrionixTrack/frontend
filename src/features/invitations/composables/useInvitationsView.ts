@@ -7,6 +7,7 @@ import {
   hasApiErrorMessage,
   mapApiErrorMessage,
 } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import { createInvitation, getInvitations } from '@features/invitations/api/invitations.api'
 import type { InvitationItem } from '@features/invitations/types/InvitationItem'
@@ -131,8 +132,7 @@ export const useInvitationsView = () => {
   )
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   const handleInviteSubmit = async (): Promise<void> => {

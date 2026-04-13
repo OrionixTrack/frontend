@@ -2,6 +2,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { createStatusRule, getSafeErrorMessage, mapApiErrorMessage } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import { deleteEmployee, getEmployees, updateEmployee } from '@features/employees/api/employees.api'
 import type { EmployeeItem } from '@features/employees/types/EmployeeItem'
@@ -190,8 +191,7 @@ export const useEmployeesView = () => {
   )
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   const setEmployeeType = (value: EmployeeType): void => {

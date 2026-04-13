@@ -107,7 +107,7 @@ watch(
         <div class="header-actions workspace-actions">
           <ThemeSwitch :theme="theme" @change="emit('updateTheme', $event)" />
         </div>
-        <BaseButton class="btn btn-secondary sidebar-logout" @click="emit('logout')">
+        <BaseButton class="btn btn-secondary sidebar-logout" type="button" @click="emit('logout')">
           {{ messages.common.signOut }}
         </BaseButton>
       </div>

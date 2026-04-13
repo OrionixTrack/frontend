@@ -2,6 +2,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ApiError, getSafeErrorMessage } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import {
     cancelDispatcherTrip,
@@ -16,7 +17,14 @@ import {
 } from '@features/dispatcher-trips/api/dispatcher-trips.api'
 import {getEmployees} from '@features/employees/api/employees.api'
 import type {EmployeeItem} from '@features/employees/types/EmployeeItem'
-import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '@features/trips/live/trips.live'
+import {
+  appendLiveTrackPoint,
+  patchTripInCollection,
+  patchTripStatus,
+  patchTripTelemetry,
+  toLiveTrackPoint,
+  type LiveTrackPoint,
+} from '@features/trips/live/trips.live'
 import {
   applyPaginatedItems,
   applyUniquePaginatedItems,
@@ -109,6 +117,7 @@ export const useDispatcherTripsView = () => {
   const driverDirectory = reactive(createPaginatedDirectoryState<EmployeeItem, ReturnType<typeof createReferenceFilters>>(createReferenceFilters))
   const vehicleDirectory = reactive(createPaginatedDirectoryState<VehicleItem, ReturnType<typeof createReferenceFilters>>(createReferenceFilters))
   const selectedTrip = ref<OwnerTripItem | null>(null)
+  const liveTrackPoints = ref<LiveTrackPoint[]>([])
   const selectedTripStats = ref<OwnerTripStats | null>(null)
   const selectedDriver = ref<EmployeeItem | null>(null)
   const selectedVehicle = ref<VehicleItem | null>(null)
@@ -327,6 +336,8 @@ export const useDispatcherTripsView = () => {
         (error) => getSafeErrorMessage(error, messages.value.trips.detailLoadError),
       )
       selectedTrip.value = trip
+      const currentPoint = trip.status === 'in_progress' ? toLiveTrackPoint(trip.currentTelemetry) : null
+      liveTrackPoints.value = currentPoint ? [currentPoint] : []
       if (route.name === 'dispatcher-trip-edit') {
         if (trip.status !== 'planned') {
           await router.replace({
@@ -340,6 +351,7 @@ export const useDispatcherTripsView = () => {
       }
     } catch {
       selectedTrip.value = null
+      liveTrackPoints.value = []
     }
   }
 
@@ -373,6 +385,7 @@ export const useDispatcherTripsView = () => {
       if (!token[0] || session.role !== 'dispatcher') {
         Object.assign(directory, createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripFilters>>(createTripFilters))
         selectedTrip.value = null
+        liveTrackPoints.value = []
         selectedTripStats.value = null
         return
       }
@@ -472,12 +485,14 @@ export const useDispatcherTripsView = () => {
 
       if (routeName === 'dispatcher-trip-create') {
         selectedTrip.value = null
+        liveTrackPoints.value = []
         syncForm(null)
         return
       }
 
       if (!tripId) {
         selectedTrip.value = null
+        liveTrackPoints.value = []
         return
       }
 
@@ -536,10 +551,20 @@ export const useDispatcherTripsView = () => {
           return
         }
 
+        const previousTelemetry = selectedTrip.value?.currentTelemetry ?? null
+
         directory.items = patchTripInCollection(directory.items, payload.tripId, (trip) =>
           patchTripTelemetry(trip, payload),
         )
         patchSelectedTrip((trip) => patchTripTelemetry(trip, payload))
+
+        if (selectedTrip.value?.status === 'in_progress') {
+          liveTrackPoints.value = appendLiveTrackPoint(
+            liveTrackPoints.value,
+            payload,
+            previousTelemetry,
+          )
+        }
       })
 
       onCleanup(() => {
@@ -552,8 +577,7 @@ export const useDispatcherTripsView = () => {
   )
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   const navigateBackToList = async (): Promise<void> => {
@@ -736,6 +760,7 @@ export const useDispatcherTripsView = () => {
     },
     pageError,
     saveError,
+    liveTrackPoints,
     selectedTrip,
     selectedTripId,
     selectedTripStats,

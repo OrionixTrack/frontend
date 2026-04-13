@@ -17,6 +17,7 @@ const {
   items,
   loadMoreTrips,
   locale,
+  liveTrackPoints,
   messages,
   openTripDetails,
   pageError,
@@ -46,6 +47,7 @@ const {
     :messages="messages"
     :theme="theme"
     :selected-trip="selectedTrip"
+    :live-track-points="liveTrackPoints"
     :detail-error="detailError"
     :is-detail-loading="isDetailLoading"
     :detail-tab="detailTab"

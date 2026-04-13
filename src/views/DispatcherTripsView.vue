@@ -37,6 +37,7 @@ const {
   loadMoreTrips,
   loadMoreVehicles,
   locale,
+  liveTrackPoints,
   messages,
   navigateBackToList,
   openDriverPicker,
@@ -294,6 +295,7 @@ const confirmDialogActionLabel = computed(() => {
     :messages="messages"
     :theme="theme"
     :selected-trip="selectedTrip"
+    :live-track-points="liveTrackPoints"
     :detail-error="detailError || actionError"
     :is-detail-loading="isDetailLoading"
     :detail-tab="detailTab"

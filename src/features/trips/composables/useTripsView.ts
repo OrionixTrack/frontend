@@ -2,6 +2,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getSafeErrorMessage } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import {
   applyPaginatedItems,
@@ -26,7 +27,14 @@ import { useTheme } from '@shared/composables/useTheme'
 import type { OwnerUser } from '@shared/types'
 
 import {getOwnerTrip, getOwnerTrips, getOwnerTripStats} from '../api/trips.api'
-import {patchTripInCollection, patchTripStatus, patchTripTelemetry} from '../live/trips.live'
+import {
+  appendLiveTrackPoint,
+  patchTripInCollection,
+  patchTripStatus,
+  patchTripTelemetry,
+  toLiveTrackPoint,
+  type LiveTrackPoint,
+} from '../live/trips.live'
 import type {OwnerTripItem} from '../types/OwnerTripItem'
 import type {OwnerTripSortBy} from '../types/OwnerTripSortBy'
 import type {OwnerTripSortOrder} from '../types/OwnerTripSortOrder'
@@ -79,6 +87,7 @@ export const useTripsView = () => {
   const activeProfile = ref<OwnerUser | null>((session.user as OwnerUser | null) ?? null)
   const directory = reactive(createPaginatedDirectoryState<OwnerTripItem, ReturnType<typeof createTripFilters>>(createTripFilters))
   const selectedTrip = ref<OwnerTripItem | null>(null)
+  const liveTrackPoints = ref<LiveTrackPoint[]>([])
   const selectedTripStats = ref<OwnerTripStats | null>(null)
   const detailTab = ref<'overview' | 'stats'>('overview')
   const statsLoadedForTripId = ref<number | null>(null)
@@ -172,6 +181,16 @@ export const useTripsView = () => {
     selectedTrip.value = patcher(selectedTrip.value)
   }
 
+  const syncLiveTrackPoints = (trip: OwnerTripItem | null): void => {
+    if (trip?.status !== 'in_progress') {
+      liveTrackPoints.value = []
+      return
+    }
+
+    const currentPoint = toLiveTrackPoint(trip.currentTelemetry)
+    liveTrackPoints.value = currentPoint ? [currentPoint] : []
+  }
+
   const refreshTripDetails = async (tripId: number): Promise<void> => {
     await loadTripDetails(tripId)
 
@@ -205,8 +224,19 @@ export const useTripsView = () => {
     })
 
     removeTelemetryListener = onTelemetryUpdate((payload) => {
+      const previousTelemetry =
+        selectedTrip.value?.id === payload.tripId ? selectedTrip.value.currentTelemetry : null
+
       patchDirectoryTrip(payload.tripId, (trip) => patchTripTelemetry(trip, payload))
       patchSelectedTrip(payload.tripId, (trip) => patchTripTelemetry(trip, payload))
+
+      if (selectedTrip.value?.id === payload.tripId && selectedTrip.value.status === 'in_progress') {
+        liveTrackPoints.value = appendLiveTrackPoint(
+          liveTrackPoints.value,
+          payload,
+          previousTelemetry,
+        )
+      }
     })
   }
 
@@ -242,8 +272,10 @@ export const useTripsView = () => {
           () => getOwnerTrip(tripId, signal),
           (error) => getSafeErrorMessage(error, messages.value.trips.detailLoadError),
       )
+      syncLiveTrackPoints(selectedTrip.value)
     } catch {
       selectedTrip.value = null
+      liveTrackPoints.value = []
     }
   }
 
@@ -277,6 +309,7 @@ export const useTripsView = () => {
       if (!token[0]) {
         resetPaginatedDirectory(directory, createTripFilters)
         selectedTrip.value = null
+        liveTrackPoints.value = []
         selectedTripStats.value = null
         return
       }
@@ -321,6 +354,7 @@ export const useTripsView = () => {
 
       if (!tripId) {
         selectedTrip.value = null
+        liveTrackPoints.value = []
         return
       }
 
@@ -384,8 +418,7 @@ export const useTripsView = () => {
   })
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   return {
@@ -439,6 +472,7 @@ export const useTripsView = () => {
       })
     },
     pageError,
+    liveTrackPoints,
     selectedTrip,
     selectedTripId,
     selectedTripStats,

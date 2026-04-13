@@ -1,5 +1,4 @@
-import { useRouter } from 'vue-router'
-
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import { useDashboard } from '@features/dashboard/composables/useDashboard'
 import { useLiveMap } from '@features/dashboard/composables/useLiveMap'
@@ -7,7 +6,6 @@ import { useI18n } from '@shared/composables/useI18n'
 import { useTheme } from '@shared/composables/useTheme'
 
 export const useDashboardView = () => {
-  const router = useRouter()
   const { session, logout, updateUser } = useSessionStore()
   const { theme, setTheme } = useTheme()
   const { locale, messages, setLocale } = useI18n()
@@ -28,8 +26,7 @@ export const useDashboardView = () => {
   const handleLogout = async (): Promise<void> => {
     resetDashboardState()
     resetLiveMap()
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   return {

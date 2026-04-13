@@ -1,7 +1,7 @@
 import { reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getSafeErrorMessage } from '@core/api'
+import { logoutAndRedirect } from '@core/navigation/logout'
 import { useSessionStore } from '@core/stores/session'
 import { getOwnerProfile, updateOwnerCompany, updateOwnerProfile } from '@features/owner-settings/api/owner-settings.api'
 import { useApiState } from '@shared/composables/useApiState'
@@ -11,7 +11,6 @@ import type { Locale } from '@shared/i18n/translations'
 import type { OwnerUser } from '@shared/types'
 
 export const useOwnerSettingsView = () => {
-  const router = useRouter()
   const { session, logout, updateUser } = useSessionStore()
   const { theme, setTheme } = useTheme()
   const { locale, messages, setLocale } = useI18n()
@@ -85,8 +84,7 @@ export const useOwnerSettingsView = () => {
   })
 
   const handleLogout = async (): Promise<void> => {
-    logout()
-    await router.replace({ name: 'login' })
+    logoutAndRedirect(logout)
   }
 
   const applyUpdatedProfile = (profile: OwnerUser): void => {
