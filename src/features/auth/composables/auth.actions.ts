@@ -25,7 +25,6 @@ import type {
   AuthMode,
   AuthScreenUi,
   DispatcherAuthResponse,
-  DriverAuthResponse,
   OwnerAuthResponse,
 } from '@features/auth/types'
 import type { TranslationDictionary } from '@shared/i18n/translations'
@@ -255,14 +254,16 @@ export const createAuthActions = ({
             ]),
         )
         form.value.password = ''
-        const normalizedPayload =
-          'dispatcher' in payload
-            ? normalizeAuthPayload('dispatcher', payload)
-            : normalizeAuthPayload('driver', payload as DriverAuthResponse)
-        sessionStore.setSession(normalizedPayload)
         authSuccess.value = authUi.value.successMessage
         await wait(700)
-        await router.replace({ name: 'dashboard' })
+
+        if ('dispatcher' in payload) {
+          sessionStore.setSession(normalizeAuthPayload('dispatcher', payload))
+          await router.replace({ name: 'dashboard' })
+          return
+        }
+
+        await router.replace({ path: '/' })
         return
       }
       default: {

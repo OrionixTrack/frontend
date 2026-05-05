@@ -107,7 +107,7 @@ const createSessionStore = (): SessionStore => {
 
         if (
           typeof parsed.accessToken === 'string' &&
-          (parsed.role === 'owner' || parsed.role === 'dispatcher' || parsed.role === 'driver') &&
+          (parsed.role === 'owner' || parsed.role === 'dispatcher') &&
           parsed.user
         ) {
           state.accessToken = parsed.accessToken

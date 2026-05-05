@@ -83,7 +83,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/DashboardView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['owner', 'dispatcher', 'driver'],
+      roles: ['owner', 'dispatcher'],
     },
   },
   {
